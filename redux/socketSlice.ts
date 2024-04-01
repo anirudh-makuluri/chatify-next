@@ -1,12 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from '@reduxjs/toolkit'
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import { AppThunk } from "./store";
 import { ChatMessage, TAuthUser, TUser } from "@/lib/types";
 
 //FIXME
 interface SocketState {
-	socket: any
+	socket: Socket | null
 }
 
 const initialState: SocketState = {
@@ -43,7 +43,7 @@ const socketSlice = createSlice({
 		joinRooms: (state, action: PayloadAction<string[]>) => {
 			if (state.socket) {
 				action.payload.forEach(roomId => {
-					state.socket.emit('join_room', roomId);
+					state.socket?.emit('join_room', roomId);
 				})
 			}
 		}
@@ -64,17 +64,3 @@ export const sendMessageToServer = (message: ChatMessage): AppThunk => (dispatch
 		socket.emit('chat_event_client_to_server', message);
 	}
 };
-
-export const socketRequest = (type : string, data : Object = {}): AppThunk => (dispatch, getState) => {
-	const { socket } = getState().socket;
-
-	return new Promise((resolve, reject) => {
-		socket.emit(type, data, (data : { error: string } | { success: string, error: null }) => {
-			if (data.error) {
-				reject(data.error);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-}

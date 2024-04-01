@@ -25,7 +25,7 @@ export type ChatDate = {
 	userUid?: null;
 	userName?: null;
 	userPhoto?: null;
-	time: any;
+	time: string;
 	isUserInfoDisplayed?: null,
 	isDate?: boolean
 }

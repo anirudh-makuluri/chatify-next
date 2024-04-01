@@ -51,7 +51,7 @@ export function genRoomId(uid1: string, uid2: string): string {
 	return roomId;
 }
 
-export function formatChatMessages(messages: (ChatMessage | ChatDate)[]) {
+export function formatChatMessages(messages: (ChatMessage)[]) {
 	const formattedMessages: (ChatDate | ChatMessage)[] = [];
 
 	let lastDate: null | string = null;

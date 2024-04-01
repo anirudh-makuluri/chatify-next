@@ -39,10 +39,6 @@ export default function Room() {
 		}
 	}, [activeChatRoomId]);
 
-	function handleUpdateMessage(e: any) {
-		setInput(e.target.value)
-	}
-
 	const sendMessage = () => {
 		if(input.trim() == "" || input == null) return;
 
@@ -91,7 +87,7 @@ export default function Room() {
 					ref={textAreaRef}
 					onKeyDown={e => {if(e.key == "Enter") sendMessage()}} 
 					value={input} 
-					onChange={handleUpdateMessage} 
+					onChange={(e) => setInput(e.target.value)} 
 					placeholder='Type your message here' 
 				/>
 				<div className='flex justify-end mt-4'>

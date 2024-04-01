@@ -25,8 +25,9 @@ export default function Home() {
 
 
 	return (
-		<div className="flex items-center justify-center min-h-screen flex-col gap-6">
-			<h1 className="text-[32px]">Welcome to Chatify!</h1>
+		<div className="flex items-center justify-center min-h-screen flex-col gap-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+			<h1 className="text-4xl md:text-6xl font-bold">Welcome to Chatify!</h1>
+			<p className="text-lg md:text-xl">Connect, collaborate, and chat effortlessly with Chatify.</p>
 			<Button onClick={navigateToNextPage}>
 				Continue
 			</Button>

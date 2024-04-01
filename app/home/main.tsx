@@ -8,7 +8,6 @@ import Room from './Room';
 import Menubar from '@/app/home/MenuBar';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
-import { socketRequest } from '@/redux/socketSlice';
 import { initAndJoinRooms } from '@/redux/socketSlice';
 import { addMessage, joinRooms } from '@/redux/chatSlice';
 import { ChatMessage } from '@/lib/types';
