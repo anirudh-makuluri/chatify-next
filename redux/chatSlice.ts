@@ -38,7 +38,7 @@ export const chatSlice = createSlice({
 		addMessage: (state, action: PayloadAction<ChatMessage>) => {
 			const chatMessages = state.rooms[action.payload.roomId].messages;
 			let lastMessage = chatMessages[chatMessages.length - 1];
-			if(lastMessage.chatId == null) lastMessage = chatMessages[chatMessages.length - 2];
+			if(lastMessage.isDate) lastMessage = chatMessages[chatMessages.length - 2];
 			action.payload.isUserInfoDisplayed = true;
 			if (lastMessage != null && lastMessage.userUid == action.payload.userUid) {
 				action.payload.isUserInfoDisplayed = false;
