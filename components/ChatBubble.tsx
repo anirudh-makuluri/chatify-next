@@ -1,9 +1,18 @@
 import { useUser } from '@/app/providers';
-import { ChatMessage } from '@/lib/types'
+import { ChatDate, ChatMessage } from '@/lib/types'
 import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from './ui/badge';
 
-export default function ChatBubble({ message }: { message: ChatMessage }) {
+export default function ChatBubble({ message }: { message: ChatMessage | ChatDate }) {
+	if(message.isDate) {
+		return (
+			<div className='flex flex-row justify-center sticky top-0'>
+				<Badge className='bg-foreground hover:bg-foreground w-20 flex justify-center'>{message.time}</Badge>
+			</div>
+		)
+	}
+
 	const user = useUser()?.user;
 	const isSelf = message.userUid == user?.uid;
 
