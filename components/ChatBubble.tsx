@@ -8,7 +8,7 @@ export default function ChatBubble({ message }: { message: ChatMessage | ChatDat
 	if(message.isDate) {
 		return (
 			<div className='flex flex-row justify-center sticky top-0'>
-				<Badge className='bg-foreground hover:bg-foreground'>{message.time}</Badge>
+				<Badge className='bg-foreground hover:bg-foreground w-20 flex justify-center'>{message.time}</Badge>
 			</div>
 		)
 	}
