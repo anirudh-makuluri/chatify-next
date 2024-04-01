@@ -61,7 +61,7 @@ export const initAndJoinRooms = (rooms: string[], user: TUser): AppThunk => disp
 export const sendMessageToServer = (message: ChatMessage): AppThunk => (dispatch, getState) => {
 	const { socket } = getState().socket;
 	if (socket) {
-		socket.emit('send_message', message);
+		socket.emit('chat_event_client_to_server', message);
 	}
 };
 

@@ -44,7 +44,7 @@ export default function Main() {
 	useEffect(() => {
 		if(!socket) return;
 
-		socket.on('receive_message', (msg : ChatMessage) => {
+		socket.on('chat_event_server_to_client', (msg : ChatMessage) => {
 			dispatch(addMessage(msg))
 		})
 
@@ -53,7 +53,7 @@ export default function Main() {
 		})
 
 		return () => {
-			socket.off("receive_message");
+			socket.off("chat_event_server_to_client");
 		}
 
 	}, [socket]);

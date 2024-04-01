@@ -9,10 +9,26 @@ export type ChatMessage = {
 	userUid: string;
 	userName: string;
 	userPhoto: string;
-	time: Date;
-	isUserInfoDisplayed?: boolean
+	time: any; //TODO: fix
+	isUserInfoDisplayed?: boolean,
+	isDate?: boolean
 };
 
+export type ChatDate = {
+	chatId?: null;
+	roomId?: null;
+	type?: null;
+	chatInfo?: null;
+	fileName?: null;
+	isMsgEdited?: null;
+	isMsgSaved?: null;
+	userUid?: null;
+	userName?: null;
+	userPhoto?: null;
+	time: any;
+	isUserInfoDisplayed?: null,
+	isDate?: boolean
+}
 
 export type TUser = {
 	name: string,
@@ -35,7 +51,7 @@ export type TAuthUser = {
 export type TRoomData = {
 	is_group: boolean
 	roomId: string,
-	messages: ChatMessage[],
+	messages: (ChatMessage | ChatDate)[],
 	name: string,
 	photo_url: string
 }
