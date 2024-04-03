@@ -83,7 +83,6 @@ export default function Room() {
 		if (messagesContainerRef.current) {
 			const container = messagesContainerRef.current;
 			if (container.scrollTop === 0) {
-				console.log('Scrolled to the top');
 				if(!socket) return;
 
 				const roomId = activeChatRoomId;

@@ -19,18 +19,15 @@ export const chatSlice = createSlice({
 	name: 'chat',
 	initialState,
 	reducers: {
-		joinRooms: (state, action: PayloadAction<TRoomData[]>) => {
-			action.payload.forEach(roomData => {
-				if (!state.rooms[roomData.roomId]) {
-					state.rooms[roomData.roomId] = {
-						is_group: roomData.is_group,
-						messages: formatChatMessages(roomData.messages),
-						name: roomData.name,
-						photo_url: roomData.photo_url,
-						roomId: roomData.roomId,
-					}
-				}
-			})
+		joinChatRoom: (state, action: PayloadAction<TRoomData>) => {
+			const roomData = action.payload
+			state.rooms[roomData.roomId] = {
+				is_group: roomData.is_group,
+				messages: formatChatMessages(roomData.messages),
+				name: roomData.name,
+				photo_url: roomData.photo_url,
+				roomId: roomData.roomId,
+			}
 		},
 		setActiveRoomId: (state, action: PayloadAction<string>) => {
 			state.activeChatRoomId = action.payload
@@ -96,5 +93,5 @@ export const chatSlice = createSlice({
 	}
 })
 
-export const { setActiveRoomId, addMessage, joinRooms, clearRoomData, addChatDoc } = chatSlice.actions
+export const { setActiveRoomId, addMessage, joinChatRoom, clearRoomData, addChatDoc } = chatSlice.actions
 export const chatReducer = chatSlice.reducer

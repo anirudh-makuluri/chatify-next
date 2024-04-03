@@ -50,14 +50,16 @@ export default function MenuBar() {
 					<DialogHeader>
 						<DialogTitle>Friend Requests</DialogTitle>
 					</DialogHeader>
-					{
-						user?.received_friend_requests?.map((invitedUser, index) => (
-							<FriendRequest
-								invitedUser={invitedUser}
-								key={index}
-							/>
-						))
-					}
+					<div className='flex flex-col gap-4 max-h-[50vh] overflow-y-auto px-2'>
+						{
+							user?.received_friend_requests.map((invitedUser, index) => (
+								<FriendRequest
+									invitedUser={invitedUser}
+									key={index}
+								/>
+							))
+						}
+					</div>
 				</DialogContent>
 			</Dialog>
 			<div className='flex flex-col gap-2 items-center'>
@@ -87,7 +89,6 @@ export default function MenuBar() {
 						</div>
 					</PopoverContent>
 				</Popover>
-
 			</div>
 		</div>
 	)

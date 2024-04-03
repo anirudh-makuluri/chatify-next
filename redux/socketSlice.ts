@@ -4,7 +4,6 @@ import io, { Socket } from 'socket.io-client';
 import { AppThunk } from "./store";
 import { ChatMessage, TAuthUser, TUser } from "@/lib/types";
 
-//FIXME
 interface SocketState {
 	socket: Socket | null
 }
@@ -40,22 +39,22 @@ const socketSlice = createSlice({
 			}
 			return state;
 		},
-		joinRooms: (state, action: PayloadAction<string[]>) => {
+		joinSocketRoom: (state, action: PayloadAction<string>) => {
 			if (state.socket) {
-				action.payload.forEach(roomId => {
-					state.socket?.emit('join_room', roomId);
-				})
+				state.socket?.emit('join_room', action.payload);
 			}
 		}
 	}
 })
 
-export const { initSocket, joinRooms } = socketSlice.actions;
+export const { initSocket, joinSocketRoom } = socketSlice.actions;
 export const socketReducer = socketSlice.reducer
 
-export const initAndJoinRooms = (rooms: string[], user: TUser): AppThunk => dispatch => {
+export const initAndJoinSocketRooms = (rooms: string[], user: TUser): AppThunk => dispatch => {
 	dispatch(initSocket(user));
-	dispatch(joinRooms(rooms));
+	rooms.forEach(roomId => {
+		dispatch(joinSocketRoom(roomId));
+	});
 }
 
 export const sendMessageToServer = (message: ChatMessage): AppThunk => (dispatch, getState) => {
