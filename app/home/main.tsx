@@ -10,7 +10,7 @@ import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinRooms } from '@/redux/socketSlice';
 import { addMessage, joinRooms } from '@/redux/chatSlice';
-import { ChatMessage } from '@/lib/types';
+import { ChatMessage, TUser } from '@/lib/types';
 
 
 export default function Main() {
@@ -47,8 +47,9 @@ export default function Main() {
 			dispatch(addMessage(msg))
 		})
 
-		socket.on('send_friend_request_server_to_client', () => {
-			
+		socket.on('send_friend_request_server_to_client', (data : TUser) => {
+			//Modify user provider to show request immediately
+			console.log("Received friend request from " + data.name);
 		})
 
 		return () => {

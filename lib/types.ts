@@ -1,6 +1,7 @@
 export type ChatMessage = {
 	chatId: number;
 	roomId: string;
+	chatDocId?: string
 	type: 'text' | 'image' | 'gif' | 'file';
 	chatInfo: string;
 	fileName?: string;
@@ -11,22 +12,25 @@ export type ChatMessage = {
 	userPhoto: string;
 	time: any; //TODO: fix
 	isUserInfoDisplayed?: boolean,
+	isConsecutiveMessage?: boolean,
 	isDate?: boolean
 };
 
 export type ChatDate = {
-	chatId?: null;
-	roomId?: null;
-	type?: null;
-	chatInfo?: null;
-	fileName?: null;
-	isMsgEdited?: null;
-	isMsgSaved?: null;
-	userUid?: null;
-	userName?: null;
-	userPhoto?: null;
+	chatId?: undefined;
+	roomId?: undefined;
+	chatDocId?: undefined
+	type?: undefined;
+	chatInfo?: undefined;
+	fileName?: undefined;
+	isMsgEdited?: undefined;
+	isMsgSaved?: undefined;
+	userUid?: undefined;
+	userName?: undefined;
+	userPhoto?: undefined;
 	time: string;
-	isUserInfoDisplayed?: null,
+	isUserInfoDisplayed?: undefined,
+	isConsecutiveMessage?: undefined,
 	isDate?: boolean
 }
 

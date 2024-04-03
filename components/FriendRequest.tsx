@@ -29,7 +29,7 @@ export default function FriendRequest({ invitedUser } : { invitedUser: TUser }) 
 	return (
 		<div className='flex flex-row items-center justify-between'>
 			<div className='flex flex-row items-center gap-2'>
-				<Avatar className='rounded-xl border border-foreground p-2'>
+				<Avatar className='rounded-full overflow-hidden'>
 					<AvatarImage referrerPolicy='no-referrer' src={invitedUser.photo_url}/>
 					<AvatarFallback>{invitedUser.name[0]}</AvatarFallback>					
 				</Avatar>

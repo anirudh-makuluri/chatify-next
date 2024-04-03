@@ -78,6 +78,13 @@ export default function Sidebar() {
 					/>
 				))
 			}
+			{
+				user?.rooms.length == 0 && 
+					<div className='flex flex-col justify-center items-center text-center gap-5 h-full'>
+						<p>You have no friends :(</p>
+						<p>Search for friends using the above search bar</p>
+					</div>
+			}
 
 		</div>
 	)

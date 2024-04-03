@@ -4,7 +4,7 @@ import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from './ui/badge';
 
-export default function ChatBubble({ message }: { message: ChatMessage | ChatDate }) {
+export default function ChatBubble({ message, isGroup }: { message: ChatMessage | ChatDate, isGroup: boolean }) {
 	if(message.isDate) {
 		return (
 			<div className='flex flex-row justify-center sticky top-0'>
@@ -13,6 +13,8 @@ export default function ChatBubble({ message }: { message: ChatMessage | ChatDat
 		)
 	}
 
+
+	
 	const user = useUser()?.user;
 	const isSelf = message.userUid == user?.uid;
 
@@ -22,7 +24,7 @@ export default function ChatBubble({ message }: { message: ChatMessage | ChatDat
 		<div className={(isSelf ? 'justify-end' : 'justify-start') + " flex mt-2"}>
 			<div className='flex flex-col gap-1'>
 				{
-					message.isUserInfoDisplayed && (
+					(!message.isConsecutiveMessage && isGroup) && (
 						<div className={(isSelf ? 'flex-row-reverse' : "flex-row") + ' flex gap-2 items-center'}>
 							<Avatar className='h-10 w-10'>
 								<AvatarImage referrerPolicy='no-referrer' src={message.userPhoto} />
@@ -32,7 +34,14 @@ export default function ChatBubble({ message }: { message: ChatMessage | ChatDat
 						</div>
 					)
 				}
-				<div className={(isSelf ? 'bg-primary rounded-tr-none mr-10' : 'bg-secondary rounded-tl-none ml-10') + " py-2 px-4 rounded-md"}>
+				<div className={(isSelf 
+						? (message.isConsecutiveMessage 
+						? 'bg-primary mr-10' : 
+						'bg-primary mr-10 rounded-tr-none') : 
+						(message.isConsecutiveMessage
+						? 'bg-secondary ml-10' : 
+						'bg-secondary ml-10 rounded-tl-none')) 
+						+ " py-2 px-4 rounded-md"}>
 					<p>{message.chatInfo}</p>
 					<p className='opacity-65 text-[10px]'>{time}</p>
 				</div>

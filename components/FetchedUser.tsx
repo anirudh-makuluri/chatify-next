@@ -5,13 +5,15 @@ import { Button } from './ui/button'
 import { useUser } from '@/app/providers'
 import { customFetch } from '@/lib/utils'
 import { useToast } from "@/components/ui/use-toast"
+import { useAppSelector } from '@/redux/store'
 
 export default function FetchedUser({ fetchedUser, closeDialog }: { fetchedUser: TUser, closeDialog: () => void }) {
 	const user = useUser()?.user;
+	const socket = useAppSelector(state => state.socket.socket);
 	const { toast } = useToast();
 
 	function handleAddFriend() {
-		if(!user) {
+		if (!user) {
 			toast({
 				title: "Error",
 				description: "User not logged in"
@@ -19,12 +21,17 @@ export default function FetchedUser({ fetchedUser, closeDialog }: { fetchedUser:
 			return;
 		}
 
-		customFetch({
-			pathName: `users/${user.uid}/friend-request?receiveruid=${fetchedUser.uid}`,
-			method: 'PUT'
-		}).then(res => {
+		if (!socket) {
+			toast({
+				title: "Error",
+				description: "Reload the page and try again"
+			})
+			return;
+		}
 
-			if(res.success) {
+		socket.emit('send_friend_request_client_to_server', { senderUid: user.uid, receiverUid: fetchedUser.uid }, (res: any) => {
+			console.log(res);
+			if (res.success) {
 				toast({
 					title: "Success",
 					description: res.sucsess

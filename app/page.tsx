@@ -29,7 +29,7 @@ export default function Home() {
 			<h1 className="text-4xl md:text-6xl font-bold">Welcome to Chatify!</h1>
 			<p className="text-lg md:text-xl">Connect, collaborate, and chat effortlessly with Chatify.</p>
 			<Button onClick={navigateToNextPage}>
-				Continue
+				{ user ? "Continue" : "Welcome" }
 			</Button>
 		</div>
 	)

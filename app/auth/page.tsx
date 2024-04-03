@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
+import Image from 'next/image'
 
 
 firebase.initializeApp(config.firebaseConfig)
@@ -124,7 +125,14 @@ export default function Page() {
 					<CardDescription>Upgrading your chatting experience!</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4 flex flex-col items-center my-6">
-					<Button onClick={authWithGoogle} className="bg-transparent rounded-sm w-full" variant={'outline'}>
+					<Button onClick={authWithGoogle} className="bg-transparent rounded-sm w-full gap-2" variant={'outline'}>
+						<Image
+							className="rounded-full"
+							src={'/google_logo.webp'}
+							width={20}
+							height={20}
+							alt="Google logo"
+						/>
 						<span>{isSignIn ? "Continue" : "Sign Up"} With Google</span>
 					</Button>
 					<div className="flex flex-row w-full items-center justify-center space-x-2 rounded-xl overflow-hidden">

@@ -55,7 +55,19 @@ export function formatChatMessages(messages: (ChatDate | ChatMessage)[]) {
 	const formattedMessages: (ChatDate | ChatMessage)[] = [];
 
 	let lastDate: null | string = null;
-	messages.forEach((chatEvent) => {
+	messages.forEach((chatEvent, index) => {
+		let lastMessage = messages[index - 1];
+		if(lastMessage == null) {
+			chatEvent.isConsecutiveMessage = false;
+		} else {
+			if(lastMessage.isDate) lastMessage = messages[index - 2];
+
+			chatEvent.isConsecutiveMessage = false;
+			if(chatEvent.userUid == lastMessage.userUid) {
+				chatEvent.isConsecutiveMessage = true;
+			}
+		}
+
 		chatEvent.time = new Date(chatEvent.time?._seconds * 1000);
 		
 		const day = String(chatEvent.time.getDate()).padStart(2, '0');
@@ -67,7 +79,7 @@ export function formatChatMessages(messages: (ChatDate | ChatMessage)[]) {
 			if (lastDate) {
 				formattedMessages.push({
 					time: formatDateForChat(chatEvent.time),
-					isDate: true
+					isDate: true,
 				})
 			}
 		}

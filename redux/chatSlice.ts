@@ -38,30 +38,57 @@ export const chatSlice = createSlice({
 		addMessage: (state, action: PayloadAction<ChatMessage>) => {
 			const chatMessages = state.rooms[action.payload.roomId].messages;
 			let lastMessage = chatMessages[chatMessages.length - 1];
-			if(lastMessage.isDate) lastMessage = chatMessages[chatMessages.length - 2];
-			action.payload.isUserInfoDisplayed = true;
-			if (lastMessage != null && lastMessage.userUid == action.payload.userUid) {
-				action.payload.isUserInfoDisplayed = false;
+
+			const newChatDate: ChatDate = {
+				time: 'Today',
+				isDate: true,
 			}
 
-			const newMessageDate = new Date(action.payload.time);
-			const lastMessageDate = new Date(lastMessage.time);
+			if (lastMessage == null) {
+				action.payload.isConsecutiveMessage = false;
+				chatMessages.push(newChatDate);
+			} else {
+				if (lastMessage.isDate) lastMessage = chatMessages[chatMessages.length - 2];
 
-			const isToday = newMessageDate.getDate() === lastMessageDate.getDate() &&
-			newMessageDate.getMonth() === lastMessageDate.getMonth() &&
-			newMessageDate.getFullYear() === lastMessageDate.getFullYear();
-
-			if(!isToday) {
-				const newChatDate : ChatDate = {
-					time: 'Today',
-					isDate: true
+				action.payload.isConsecutiveMessage = false;
+				if (lastMessage.userUid == action.payload.userUid) {
+					action.payload.isConsecutiveMessage = true;
 				}
 
-				chatMessages.push(newChatDate);
+
+				const newMessageDate = new Date(action.payload.time);
+				const lastMessageDate = new Date(lastMessage.time);
+
+				const isToday = newMessageDate.getDate() === lastMessageDate.getDate() &&
+					newMessageDate.getMonth() === lastMessageDate.getMonth() &&
+					newMessageDate.getFullYear() === lastMessageDate.getFullYear();
+
+				if (!isToday) {
+					chatMessages.push(newChatDate);
+				}
 			}
 
-
 			state.rooms[action.payload.roomId].messages = [...chatMessages, action.payload]
+		},
+		addChatDoc: (state, action: PayloadAction<{ messages: ChatMessage[], roomId: string }>) => {
+			const formattedMessages = formatChatMessages(action.payload.messages);
+			const currentMessages = state.rooms[action.payload.roomId].messages
+
+			const curChatDocFirstMsg = currentMessages[1];
+			const newChatDocLastMsg = formattedMessages[formattedMessages.length - 1];
+			
+			const firstMsgDate = new Date(curChatDocFirstMsg.time);
+			const lastMsgDate = new Date(newChatDocLastMsg.time);
+
+			const isSameDay = firstMsgDate.getDate() === lastMsgDate.getDate() &&
+			firstMsgDate.getMonth() === lastMsgDate.getMonth() &&
+			firstMsgDate.getFullYear() === lastMsgDate.getFullYear();
+
+			if(isSameDay) {
+				currentMessages.shift();
+			}
+
+			state.rooms[action.payload.roomId].messages = [...formattedMessages, ...currentMessages];
 		},
 		clearRoomData: (state) => {
 			state = initialState;
@@ -69,5 +96,5 @@ export const chatSlice = createSlice({
 	}
 })
 
-export const { setActiveRoomId, addMessage, joinRooms, clearRoomData } = chatSlice.actions
+export const { setActiveRoomId, addMessage, joinRooms, clearRoomData, addChatDoc } = chatSlice.actions
 export const chatReducer = chatSlice.reducer
