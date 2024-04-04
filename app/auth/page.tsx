@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import Image from 'next/image'
+import { customFetch } from "@/lib/utils";
 
 
 firebase.initializeApp(config.firebaseConfig)
@@ -101,17 +102,11 @@ export default function Page() {
 
 		const idToken = await user?.getIdToken();
 
-		fetch('http://localhost:5000/session', {
+		customFetch({
+			pathName: 'session',
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			credentials: "include",
-			body: JSON.stringify({
-				idToken
-			})
-		}).then(res => res.json())
-			.then(res => {
+			body: { idToken }
+		}).then(res => {
 				auth.signOut();
 				login();
 			})

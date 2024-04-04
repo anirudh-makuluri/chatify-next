@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ChatMessage, ChatDate } from "./types"
+import { globals } from "@/globals"
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -27,7 +28,7 @@ export const customFetch = async ({ pathName, method = 'GET', body }: {
 		}
 
 		try {
-			const response = await fetch(`http://localhost:5000/${pathName}`, requestObj);
+			const response = await fetch(`${globals.BACKEND_URL}/${pathName}`, requestObj);
 
 			if (!response.ok) {
 				return reject(response);

@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import io, { Socket } from 'socket.io-client';
 import { AppThunk } from "./store";
 import { ChatMessage, TAuthUser, TUser } from "@/lib/types";
+import { globals } from "@/globals";
 
 interface SocketState {
 	socket: Socket | null
@@ -20,7 +21,8 @@ const socketSlice = createSlice({
 			if (state.socket == null) {
 
 				console.log("initing socket");
-				const socket = io('http://localhost:5000', {
+				const backendUrl = globals.BACKEND_URL;
+				const socket = io(backendUrl, {
 					transports: ['websocket'],
 					// upgrade: false,
 					// autoConnect: false,
