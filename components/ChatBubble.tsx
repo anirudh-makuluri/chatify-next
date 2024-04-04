@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from './ui/badge';
 
 export default function ChatBubble({ message, isGroup }: { message: ChatMessage | ChatDate, isGroup: boolean }) {
+	const user = useUser()?.user;
+
 	if(message.isDate) {
 		return (
 			<div className='flex flex-row justify-center sticky top-0'>
@@ -13,9 +15,6 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 		)
 	}
 
-
-	
-	const user = useUser()?.user;
 	const isSelf = message.userUid == user?.uid;
 
 	const time = new Date(message.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
