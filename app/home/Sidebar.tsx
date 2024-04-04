@@ -44,7 +44,7 @@ export default function Sidebar() {
 	}
 
 	return (
-		<div className='w-1/4'>
+		<div className='w-full'>
 			<div className='flex flex-row gap-2 my-2 px-4'>
 				<Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder='Search or start a new chat' className='text-xs' />
 				<Button onClick={handleSubmitSearch}>Search</Button>

@@ -12,6 +12,7 @@ import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
 import { addMessage, joinChatRoom } from '@/redux/chatSlice';
 import { ChatMessage, TRoomData, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
+import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 
 
 export default function Page() {
@@ -20,6 +21,7 @@ export default function Page() {
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
 	const socket = useAppSelector(state => state.socket.socket);
 	const dispatch = useAppDispatch();
+	const isMobile = useClientMediaQuery('(max-width: 600px)')
 
 	const [areRoomsInited, setRoomsInited] = useState(false);
 
@@ -100,11 +102,14 @@ export default function Page() {
 
 	return (
 		<div className='min-h-screen flex flex-row'>
-			<Menubar />
-			<Separator orientation='vertical' className='min-h-screen' />
-			<Sidebar />
-			<Separator orientation='vertical' className='min-h-screen' />
-			{activeChatRoomId != '' ? <Room /> : <NoActiveRoom />}
+			<div style={{ display: activeChatRoomId == '' || !isMobile ? "flex" : "none" }} className="flex flex-row sm:w-1/4 w-full">
+				<Menubar />
+				<Separator orientation='vertical' className='min-h-screen' />
+				<Sidebar />
+				<Separator orientation='vertical' className='min-h-screen' />
+			</div>
+			{isMobile && activeChatRoomId != '' && <Room/>}
+			{!isMobile && (activeChatRoomId != '' ? <Room /> : <NoActiveRoom />)}
 		</div>
 	)
 }

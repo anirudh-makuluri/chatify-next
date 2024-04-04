@@ -3,11 +3,12 @@ import { Textarea } from '@/components/ui/textarea'
 import React, { useEffect, useRef, useState } from 'react'
 import {
 	Send,
-	SmileIcon
+	SmileIcon,
+	ArrowLeft
 } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useAppDispatch, useAppSelector } from '@/redux/store';
-import { addChatDoc, addMessage } from '@/redux/chatSlice';
+import { addChatDoc, addMessage, setActiveRoomId } from '@/redux/chatSlice';
 import { useUser } from '../providers';
 import { ChatMessage } from '@/lib/types';
 import ChatBubble from '@/components/ChatBubble';
@@ -125,9 +126,16 @@ export default function Room() {
         setInput(newInput);
 	}
 
+	function handleBackButton() {
+		dispatch(setActiveRoomId(''));
+	}
+
 	return (
 		<div className='w-full flex flex-col relative pb-4'>
 			<div className='bg-card w-full h-[10vh] px-2 flex flex-row items-center justify-start gap-4 absolute top-0'>
+				<Button onClick={handleBackButton} variant={'ghost'} className='block sm:hidden'>
+					<ArrowLeft/>
+				</Button>
 				<Avatar>
 					<AvatarImage src={activeRoom.photo_url} className='h-10 w-10 rounded-full' />
 				</Avatar>
