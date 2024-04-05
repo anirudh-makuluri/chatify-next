@@ -21,6 +21,8 @@ export const chatSlice = createSlice({
 	reducers: {
 		joinChatRoom: (state, action: PayloadAction<TRoomData>) => {
 			const roomData = action.payload
+			if(state.rooms[roomData.roomId] != null) return;
+			
 			state.rooms[roomData.roomId] = {
 				is_group: roomData.is_group,
 				messages: formatChatMessages(roomData.messages),

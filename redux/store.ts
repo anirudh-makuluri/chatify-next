@@ -5,15 +5,15 @@ import { chatReducer } from './chatSlice';
 import { socketReducer } from './socketSlice';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  RootState,
-  unknown,
-  Action<string>
+	ReturnType,
+	RootState,
+	unknown,
+	Action<string>
 >;
 
 export const store = configureStore({
 	reducer: { chat: chatReducer, socket: socketReducer },
-	middleware: (getDefaultMiddleware) => 
+	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({ serializableCheck: false })
 })
 
