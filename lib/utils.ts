@@ -58,19 +58,19 @@ export function formatChatMessages(messages: (ChatDate | ChatMessage)[]) {
 	let lastDate: null | string = null;
 	messages.forEach((chatEvent, index) => {
 		let lastMessage = messages[index - 1];
-		if(lastMessage == null) {
+		if (lastMessage == null) {
 			chatEvent.isConsecutiveMessage = false;
 		} else {
-			if(lastMessage.isDate) lastMessage = messages[index - 2];
+			if (lastMessage.isDate) lastMessage = messages[index - 2];
 
 			chatEvent.isConsecutiveMessage = false;
-			if(chatEvent.userUid == lastMessage.userUid) {
+			if (chatEvent.userUid == lastMessage.userUid) {
 				chatEvent.isConsecutiveMessage = true;
 			}
 		}
 
 		chatEvent.time = new Date(chatEvent.time?._seconds * 1000);
-		
+
 		const day = String(chatEvent.time.getDate()).padStart(2, '0');
 		const month = String(chatEvent.time.getMonth() + 1).padStart(2, '0');
 		const year = chatEvent.time.getFullYear();
@@ -116,4 +116,14 @@ function formatDateForChat(date: Date) {
 		const year = date.getFullYear();
 		return `${day}-${month}-${year}`;
 	}
+}
+
+export function dataURIToBlob(dataURI: string) {
+	const mime = dataURI.split(',')[0].split(':')[1].split(';')[0];
+	const binary = atob(dataURI.split(',')[1]);
+	const array = [];
+	for (var i = 0; i < binary.length; i++) {
+		array.push(binary.charCodeAt(i));
+	}
+	return new Blob([new Uint8Array(array)], { type: mime });
 }

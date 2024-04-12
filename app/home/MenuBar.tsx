@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ThemeToggle } from '../../components/theme-toggle'
 import { useUser } from '@/app/providers'
 import {
@@ -29,6 +29,9 @@ import { clearRoomData } from '@/redux/chatSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import CropperOverlay from '@/components/CropperOverlay';
+import { dataURIToBlob } from '@/lib/utils';
+import { globals } from '@/globals';
 
 
 export default function MenuBar() {
@@ -37,19 +40,24 @@ export default function MenuBar() {
 	const socket = useAppSelector(state => state.socket.socket);
 	const { toast } = useToast();
 
+	const imageRef = useRef<HTMLInputElement | null>(null);
+
 	const [isUserNameEditable, setUserNameEditable] = useState<boolean>(false);
 	const [newUserName, setNewUserName] = useState<string>(user?.name || "");
 
-	useEffect(() => {
-		if(!user || !socket) return;
+	const [isCropperOverlayVisible, setCropperOverlayVisibility] = useState(false);
+	const [profileUrl, setProfileUrl] = useState("");
 
-		if(!isUserNameEditable && newUserName != user.name && newUserName.trim() != "") {
+	useEffect(() => {
+		if (!user || !socket) return;
+
+		if (!isUserNameEditable && newUserName != user.name && newUserName.trim() != "") {
 			const newData = {
 				name: newUserName
 			}
-			socket.emit('update_user_data', { uid: user.uid, newData }, (response : any) => {
+			socket.emit('update_user_data', { uid: user.uid, newData }, (response: any) => {
 				console.log(response);
-				if(response.success) {
+				if (response.success) {
 					updateUser(newData);
 					toast({
 						description: "User name updated"
@@ -69,6 +77,60 @@ export default function MenuBar() {
 	function logOut() {
 		dispatch(clearRoomData());
 		logout();
+	}
+
+	function changeProfilePhoto() {
+		if (!imageRef.current) return;
+
+		imageRef.current.click();
+
+		imageRef.current.onchange = (e: any) => {
+			const file = e.target?.files[0];
+			const profileUrl = URL.createObjectURL(file);
+			setProfileUrl(profileUrl);
+			setCropperOverlayVisibility(true);
+		}
+	}
+
+	function saveProfilePhotoToStorageAndDb(url: string) {
+		if (!user || !socket) return;
+
+		const photoBlob = dataURIToBlob(url);
+		const storagePath = `${encodeURIComponent(user.uid)}-profile_photo`;
+
+		const formData = new FormData();
+		formData.append("file", photoBlob);
+
+		console.log(photoBlob);
+
+		fetch(`${globals.BACKEND_URL}/users/${user.uid}/files?storagePath=${storagePath}`, {
+			method: 'POST',
+			body: formData
+		}).then(res => res.json())
+			.then((response: any) => {
+				if (response.success) {
+					const downloadUrl = response.downloadUrl;
+					const newData = {
+						photo_url: downloadUrl
+					}
+
+					socket.emit('update_user_data', { uid: user.uid, newData }, (response: any) => {
+						if (response.success) {
+							updateUser(newData);
+							toast({
+								description: "User photo updated"
+							})
+						} else {
+							toast({
+								description: JSON.stringify(response.error)
+							})
+						}
+						setCropperOverlayVisibility(false);
+					})
+
+
+				}
+			})
 	}
 
 	return (
@@ -107,22 +169,28 @@ export default function MenuBar() {
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent className='space-y-6'>
-						<Avatar className='w-20 h-20'>
-							<AvatarImage src={user?.photo_url}/>
-						</Avatar>
+						<div onClick={changeProfilePhoto} className='group relative w-20 hover:cursor-pointer'>
+							<Avatar className='w-20 h-20'>
+								<AvatarImage src={user?.photo_url} />
+							</Avatar>
+							<div className='bg-slate-500 hidden group-hover:flex rounded-full opacity-70 w-20 h-20 absolute top-0'>
+								<PencilIcon size={12} className='absolute bottom-3 right-3' />
+							</div>
+							<Input className='hidden' ref={imageRef} type='file' accept='image/*' />
+						</div>
 						<div className='flex flex-row w-full justify-between items-center'>
 							{
-								isUserNameEditable ? 
-									<Input className='text-lg' value={newUserName} onChange={e => setNewUserName(e.target.value)}/>
+								isUserNameEditable ?
+									<Input className='text-lg' value={newUserName} onChange={e => setNewUserName(e.target.value)} />
 									:
 									<p className='text-lg'>{user?.name}</p>
 							}
-							<Button className='ml-2' onClick={() =>	setUserNameEditable(prev => !prev)} variant={isUserNameEditable ? 'default' : 'ghost'}>
+							<Button className='ml-2' onClick={() => setUserNameEditable(prev => !prev)} variant={isUserNameEditable ? 'default' : 'ghost'}>
 								{
-									isUserNameEditable ? 
-										<Send size={18}/>
+									isUserNameEditable ?
+										<Send size={18} />
 										:
-										<PencilIcon size={18}/>
+										<PencilIcon size={18} />
 								}
 							</Button>
 						</div>
@@ -134,6 +202,12 @@ export default function MenuBar() {
 					</PopoverContent>
 				</Popover>
 			</div>
+			<CropperOverlay
+				url={profileUrl}
+				isCropperOverlayVisible={isCropperOverlayVisible}
+				setCropperOverlayVisibility={setCropperOverlayVisibility}
+				saveCroppedImage={saveProfilePhotoToStorageAndDb}
+			/>
 		</div>
 	)
 }
