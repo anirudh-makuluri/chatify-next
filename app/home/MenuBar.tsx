@@ -95,7 +95,9 @@ export default function MenuBar() {
 	function saveProfilePhoto(url: string) {
 		if (!user || !socket) return;
 
-		savePhotoToStorage(url)?.then((downloadUrl) => {
+		const storagePath = `${encodeURIComponent(user.uid)}-profile_photo`;
+
+		saveFileToStorage(url, storagePath)?.then((downloadUrl) => {
 			const newData = {
 				photo_url: downloadUrl
 			}
@@ -112,7 +114,7 @@ export default function MenuBar() {
 					})
 				}
 			})
-		}).catch((err) => {
+		}).catch((err : any) => {
 			toast({
 				description: JSON.stringify(err)
 			})
@@ -122,11 +124,11 @@ export default function MenuBar() {
 
 	}
 
-	function savePhotoToStorage(url: string) {
+	function saveFileToStorage(url: string, storagePath : string) {
 		if (!user || !socket) return;
 
 		const photoBlob = dataURIToBlob(url);
-		const storagePath = `${encodeURIComponent(user.uid)}-profile_photo`;
+		
 
 		const formData = new FormData();
 		formData.append("file", photoBlob);
