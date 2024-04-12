@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ThemeToggle } from '../../components/theme-toggle'
 import { useUser } from '@/app/providers'
 import {
 	UserRoundPlus,
-	PencilIcon
+	PencilIcon,
+	Send
 } from 'lucide-react'
 import { Button } from '../../components/ui/button';
 import {
@@ -25,12 +26,45 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover"
 import { clearRoomData } from '@/redux/chatSlice';
-import { useAppDispatch } from '@/redux/store';
+import { useAppDispatch, useAppSelector } from '@/redux/store';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 
 
 export default function MenuBar() {
-	const { user, logout } = useUser();
+	const { user, logout, updateUser } = useUser();
 	const dispatch = useAppDispatch();
+	const socket = useAppSelector(state => state.socket.socket);
+	const { toast } = useToast();
+
+	const [isUserNameEditable, setUserNameEditable] = useState<boolean>(false);
+	const [newUserName, setNewUserName] = useState<string>(user?.name || "");
+
+	useEffect(() => {
+		if(!user || !socket) return;
+
+		if(!isUserNameEditable && newUserName != user.name && newUserName.trim() != "") {
+			const newData = {
+				name: newUserName
+			}
+			socket.emit('update_user_data', { uid: user.uid, newData }, (response : any) => {
+				console.log(response);
+				if(response.success) {
+					updateUser(newData);
+					toast({
+						description: "User name updated"
+					})
+				} else {
+					toast({
+						description: JSON.stringify(response.error)
+					})
+				}
+			})
+		} else {
+			setNewUserName(user.name)
+		}
+
+	}, [isUserNameEditable]);
 
 	function logOut() {
 		dispatch(clearRoomData());
@@ -77,9 +111,19 @@ export default function MenuBar() {
 							<AvatarImage src={user?.photo_url}/>
 						</Avatar>
 						<div className='flex flex-row w-full justify-between items-center'>
-							<p className='text-lg'>{user?.name}</p>
-							<Button disabled variant={'ghost'}>
-								<PencilIcon size={18}/>
+							{
+								isUserNameEditable ? 
+									<Input className='text-lg' value={newUserName} onChange={e => setNewUserName(e.target.value)}/>
+									:
+									<p className='text-lg'>{user?.name}</p>
+							}
+							<Button className='ml-2' onClick={() =>	setUserNameEditable(prev => !prev)} variant={isUserNameEditable ? 'default' : 'ghost'}>
+								{
+									isUserNameEditable ? 
+										<Send size={18}/>
+										:
+										<PencilIcon size={18}/>
+								}
 							</Button>
 						</div>
 						<div className='w-full flex justify-center items-center'>
