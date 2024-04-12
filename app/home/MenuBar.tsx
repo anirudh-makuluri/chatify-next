@@ -79,7 +79,7 @@ export default function MenuBar() {
 		logout();
 	}
 
-	function changeProfilePhoto() {
+	function openImageChoose() {
 		if (!imageRef.current) return;
 
 		imageRef.current.click();
@@ -92,7 +92,37 @@ export default function MenuBar() {
 		}
 	}
 
-	function saveProfilePhotoToStorageAndDb(url: string) {
+	function saveProfilePhoto(url: string) {
+		if (!user || !socket) return;
+
+		savePhotoToStorage(url)?.then((downloadUrl) => {
+			const newData = {
+				photo_url: downloadUrl
+			}
+
+			socket.emit('update_user_data', { uid: user.uid, newData }, (response: any) => {
+				if (response.success) {
+					updateUser(newData);
+					toast({
+						description: "User photo updated"
+					})
+				} else {
+					toast({
+						description: JSON.stringify(response.error)
+					})
+				}
+			})
+		}).catch((err) => {
+			toast({
+				description: JSON.stringify(err)
+			})
+		}).finally(() => {
+			setCropperOverlayVisibility(false);
+		})
+
+	}
+
+	function savePhotoToStorage(url: string) {
 		if (!user || !socket) return;
 
 		const photoBlob = dataURIToBlob(url);
@@ -101,34 +131,17 @@ export default function MenuBar() {
 		const formData = new FormData();
 		formData.append("file", photoBlob);
 
-		console.log(photoBlob);
-
-		fetch(`${globals.BACKEND_URL}/users/${user.uid}/files?storagePath=${storagePath}`, {
+		return fetch(`${globals.BACKEND_URL}/users/${user.uid}/files?storagePath=${storagePath}`, {
 			method: 'POST',
 			body: formData
 		}).then(res => res.json())
 			.then((response: any) => {
 				if (response.success) {
 					const downloadUrl = response.downloadUrl;
-					const newData = {
-						photo_url: downloadUrl
-					}
 
-					socket.emit('update_user_data', { uid: user.uid, newData }, (response: any) => {
-						if (response.success) {
-							updateUser(newData);
-							toast({
-								description: "User photo updated"
-							})
-						} else {
-							toast({
-								description: JSON.stringify(response.error)
-							})
-						}
-						setCropperOverlayVisibility(false);
-					})
-
-
+					return downloadUrl;
+				} else {
+					throw response;
 				}
 			})
 	}
@@ -169,12 +182,12 @@ export default function MenuBar() {
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent className='space-y-6'>
-						<div onClick={changeProfilePhoto} className='group relative w-20 hover:cursor-pointer'>
+						<div onClick={openImageChoose} className='group relative w-20 hover:cursor-pointer'>
 							<Avatar className='w-20 h-20'>
 								<AvatarImage src={user?.photo_url} />
 							</Avatar>
-							<div className='bg-slate-500 hidden group-hover:flex rounded-full opacity-70 w-20 h-20 absolute top-0'>
-								<PencilIcon size={12} className='absolute bottom-3 right-3' />
+							<div className='bg-slate-500 hidden group-hover:flex rounded-full opacity-40 w-20 h-20 absolute top-0 items-center justify-center'>
+								<PencilIcon size={18} />
 							</div>
 							<Input className='hidden' ref={imageRef} type='file' accept='image/*' />
 						</div>
@@ -206,7 +219,7 @@ export default function MenuBar() {
 				url={profileUrl}
 				isCropperOverlayVisible={isCropperOverlayVisible}
 				setCropperOverlayVisibility={setCropperOverlayVisibility}
-				saveCroppedImage={saveProfilePhotoToStorageAndDb}
+				saveCroppedImage={saveProfilePhoto}
 			/>
 		</div>
 	)
