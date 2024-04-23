@@ -215,7 +215,7 @@ export default function Room() {
 			<div style={{ display: previewImages.length > 0 ? "flex" : "none" }} className='mx-4 mb-2 h-[8vh] flex flex-row gap-4'>
 				{
 					previewImages.map((data, index) => (
-						<div className='group relative'>
+						<div key={index} className='group relative'>
 							<Image className='rounded-md' width={64} height={64} alt='Image' src={data.url}/>
 							<div onClick={() => removePreviewImage(index)} className='hidden group-hover:flex absolute top-0 right-0 cursor-pointer'>X</div>
 						</div>
