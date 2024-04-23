@@ -3,14 +3,25 @@ import { ChatDate, ChatMessage } from '@/lib/types'
 import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from './ui/badge';
+import Image from 'next/image';
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function ChatBubble({ message, isGroup }: { message: ChatMessage | ChatDate, isGroup: boolean }) {
 	const user = useUser()?.user;
 
-	if(message.isDate) {
+	if (message.isDate) {
 		return (
 			<div className='flex flex-row justify-center sticky top-0'>
-				<Badge className='bg-foreground hover:bg-foreground w-22 flex justify-center'>{message.time}</Badge>
+				<Badge className='bg-foreground hover:bg-foreground w-28 flex justify-center'>{message.time}</Badge>
 			</div>
 		)
 	}
@@ -18,6 +29,18 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 	const isSelf = message.userUid == user?.uid;
 
 	const time = new Date(message.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+
+	function returnRequiredFormat() {
+		switch (message.type) {
+			case 'text':
+				return <TextMessage message={message}/>
+			case 'image':
+				return <ImageMessage message={message}/>		
+			default:
+				return <p>Invalid format</p>
+		}
+	}
 
 	return (
 		<div className={(isSelf ? 'justify-end' : 'justify-start') + " flex mt-2"}>
@@ -33,18 +56,49 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 						</div>
 					)
 				}
-				<div className={(isSelf 
-						? (message.isConsecutiveMessage 
-						? 'bg-primary mr-10' : 
-						'bg-primary mr-10 rounded-tr-none') : 
-						(message.isConsecutiveMessage
-						? 'bg-secondary ml-10' : 
-						'bg-secondary ml-10 rounded-tl-none')) 
-						+ " py-2 px-4 rounded-md"}>
-					<p>{message.chatInfo}</p>
+				<div className={(isSelf
+					? (message.isConsecutiveMessage
+						? 'bg-primary mr-10' :
+						'bg-primary mr-10 rounded-tr-none') :
+					(message.isConsecutiveMessage
+						? 'bg-secondary ml-10' :
+						'bg-secondary ml-10 rounded-tl-none'))
+					+ " py-2 px-4 rounded-md"}>
+					{returnRequiredFormat()}
 					<p className='opacity-65 text-[10px]'>{time}</p>
 				</div>
 			</div>
 		</div>
+	)
+}
+
+
+
+function TextMessage({ message }: { message: ChatMessage | ChatDate }) {
+	return <p>{message.chatInfo}</p>
+}
+
+
+function ImageMessage({ message }: { message: ChatMessage | ChatDate }) {
+	return (
+		<Dialog>
+			<DialogTrigger asChild>
+				<Image
+					src={message.chatInfo || ""}
+					alt={message.fileName || ""}
+					width={250}
+					height={250}
+					className='rounded-md'
+				/>
+			</DialogTrigger>
+			<DialogContent className='h-[75vh] w-[75vw]'>
+				<Image
+					src={message.chatInfo || ""}
+					alt={message.fileName || ""}
+					className='rounded-md mb-2'
+					fill					
+				/>
+			</DialogContent>
+		</Dialog>
 	)
 }

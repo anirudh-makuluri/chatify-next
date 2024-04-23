@@ -127,3 +127,23 @@ export function dataURIToBlob(dataURI: string) {
 	}
 	return new Blob([new Uint8Array(array)], { type: mime });
 }
+
+export async function saveFileToStorage(file: File, storagePath : string, uid : string) {	
+
+	const formData = new FormData();
+	formData.append("file", file);
+
+	return fetch(`${globals.BACKEND_URL}/users/${uid}/files?storagePath=${storagePath}`, {
+		method: 'POST',
+		body: formData
+	}).then(res => res.json())
+		.then((response: any) => {
+			if (response.success) {
+				const downloadUrl = response.downloadUrl;
+
+				return downloadUrl;
+			} else {
+				throw response;
+			}
+		})
+}

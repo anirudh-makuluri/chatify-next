@@ -13,6 +13,7 @@ import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import Image from 'next/image'
 import { customFetch } from "@/lib/utils";
+import LoadingScreen from "@/components/LoadingScreen";
 
 
 firebase.initializeApp(config.firebaseConfig)
@@ -26,6 +27,8 @@ export default function Page() {
 	const { toast } = useToast();
 	const { user, isLoading, login } = useUser();
 	const router = useRouter();
+
+	const [isLoadingScreenVisible, setLoadingScreenVisibility] = useState(true);
 	const [isSignIn, setSignIn] = useState(true);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -34,6 +37,10 @@ export default function Page() {
 		if(user && !isLoading) {
 			router.replace('/home');
 			return;
+		}
+
+		if(!isLoading) {
+			setLoadingScreenVisibility(false);
 		}
 	}, [user, isLoading])
 
@@ -114,6 +121,7 @@ export default function Page() {
 
 	return (
 		<div className="flex items-center justify-center min-h-screen">
+			{isLoadingScreenVisible && <LoadingScreen/>}
 			<Card className="p-8 w-[400px]">
 				<CardHeader className="flex flex-col justify-center items-center space-y-4">
 					<CardTitle className="text-2xl">Chatify</CardTitle>

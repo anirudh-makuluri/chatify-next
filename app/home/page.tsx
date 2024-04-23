@@ -13,6 +13,7 @@ import { addMessage, joinChatRoom } from '@/redux/chatSlice';
 import { ChatMessage, TRoomData, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
+import LoadingScreen from '@/components/LoadingScreen';
 
 
 export default function Page() {
@@ -21,7 +22,9 @@ export default function Page() {
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
 	const socket = useAppSelector(state => state.socket.socket);
 	const dispatch = useAppDispatch();
-	const isMobile = useClientMediaQuery('(max-width: 600px)')
+	const isMobile = useClientMediaQuery('(max-width: 600px)');
+
+	const [isLoadingScreenVisible, setLoadingScreenVisibility] = useState(true);
 
 	const [areRoomsInited, setRoomsInited] = useState(false);
 
@@ -31,6 +34,7 @@ export default function Page() {
 		}
 
 		if (!user || areRoomsInited) return;
+		setLoadingScreenVisibility(false);
 
 		const roomIds: string[] = user.rooms.map(u => u.roomId);
 
@@ -102,6 +106,7 @@ export default function Page() {
 
 	return (
 		<div className='min-h-screen flex flex-row'>
+			{isLoadingScreenVisible && <LoadingScreen/>}
 			<div style={{ display: activeChatRoomId == '' || !isMobile ? "flex" : "none" }} className="flex flex-row sm:w-1/4 w-full">
 				<Menubar />
 				<Separator orientation='vertical' className='min-h-screen' />

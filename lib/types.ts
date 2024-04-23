@@ -59,3 +59,8 @@ export type TRoomData = {
 	name: string,
 	photo_url: string
 }
+
+export type TPreviewImage = {
+	url: string,
+	file : File
+}

@@ -27,7 +27,15 @@ export default function SidebarRoomDisplay({ roomData }: { roomData: TRoomData }
 
 		const lastMesage = currentMessages[currentMessages.length - 1];
 
-		return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : ${lastMesage.chatInfo}`
+		switch (lastMesage.type) {
+			case 'text':
+				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : ${lastMesage.chatInfo}`
+			case 'image':
+				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : Uploaded an image`
+		
+			default:
+				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : Sent a message`
+		}
 	}
 
 	if(!user) {
