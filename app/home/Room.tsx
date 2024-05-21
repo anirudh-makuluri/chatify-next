@@ -323,7 +323,7 @@ export default function Room() {
 								<div id='giphy-grid' className='grid h-80 overflow-y-auto grid-cols-3 mt-4 gap-4'>
 									{
 										gifList.map((gif, index) => (
-											<div onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
+											<div key={index} onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
 												<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width}/>
 											</div>
 										))
