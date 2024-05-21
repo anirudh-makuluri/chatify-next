@@ -1,17 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { KeyboardEventHandler, useEffect, useRef, useState } from 'react'
 import {
 	Send,
 	SmileIcon,
 	ArrowLeft,
-	ImageIcon
+	ImageIcon,
+	FileCode
 } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { addChatDoc, addMessage, setActiveRoomId } from '@/redux/chatSlice';
 import { useUser } from '../providers';
-import { ChatMessage, TPreviewImage } from '@/lib/types';
+import { ChatMessage, TGiphy, TPreviewImage } from '@/lib/types';
 import ChatBubble from '@/components/ChatBubble';
 import { sendMessageToServer } from '@/redux/socketSlice';
 import { Avatar, AvatarImage } from '@radix-ui/react-avatar';
@@ -22,10 +23,10 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover"
 import { useTheme } from "next-themes"
-import { MouseDownEvent } from 'emoji-picker-react/dist/config/config';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { saveFileToStorage } from '@/lib/utils';
+import { config } from '@/lib/config';
 
 export default function Room() {
 	const { toast } = useToast();
@@ -47,6 +48,13 @@ export default function Room() {
 	const [input, setInput] = useState<string>("");
 	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom.messages.length);
 	const [previewImages, setPreviewImages] = useState<TPreviewImage[]>([]);
+
+	const [giphySearchText, setGiphySearchText] = useState('');
+	const [gifList, setGifList] = useState<TGiphy[]>([]);
+
+	useEffect(() => {
+		searchGiphy();
+	}, []);
 
 	useEffect(() => {
 		if (activeChatRoomId != "") {
@@ -111,6 +119,29 @@ export default function Room() {
 		dispatch(sendMessageToServer(chatMessage))
 		setInput("");
 		setPreviewImages([])
+	}
+
+	const sendGiphy = (url : string) => {
+		if (!user) {
+			toast({
+				title: "Error",
+				description: "User not logged in"
+			})
+			return;
+		}
+
+		const chatMessage : ChatMessage = {
+			chatId: (Date.now() * Math.floor(Math.random() * 1000)),
+			roomId: activeChatRoomId,
+			type: 'gif',
+			chatInfo: url,
+			userUid: user.uid,
+			userName: user.name,
+			userPhoto: user.photo_url,
+			time: new Date()
+		}
+
+		dispatch(sendMessageToServer(chatMessage))
 	}
 
 	const scrollToBottom = () => {
@@ -186,6 +217,33 @@ export default function Room() {
 		setPreviewImages(newPreviewImages);
 	}
 
+
+	async function searchGiphy() {
+		const search = giphySearchText.trim()
+		const url = search.length == 0 
+			? `https://api.giphy.com/v1/gifs/trending?api_key=${config.giphyApiKey}` 
+			: `https://api.giphy.com/v1/gifs/search?api_key=${config.giphyApiKey}&q=${search}`
+		
+		
+		const res = await fetch(url).then(res => res.json());
+		const newGifList : TGiphy[] = res.data.map((data : any) => {
+			return {
+				url: data.images.fixed_width_downsampled.url,
+				height: data.images.fixed_width_downsampled.height,
+				width: data.images.fixed_width_downsampled.width
+			}
+		})
+
+		setGifList(newGifList)
+	}
+
+	async function handleSearchGiphyWithEnter(e : React.KeyboardEvent<HTMLInputElement>) {
+		if (e.keyCode === 13 && !e.shiftKey) {
+			e.preventDefault();
+			searchGiphy();
+		}		
+	}
+
 	return (
 		<div className='w-full flex flex-col relative pb-4'>
 			<div className='bg-card w-full h-[10vh] px-2 flex flex-row items-center justify-start gap-4 absolute top-0'>
@@ -249,12 +307,35 @@ export default function Room() {
 							<ImageIcon/>
 							<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple/>
 						</Button>
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button variant={'outline'}>
+									<FileCode />
+									<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className='w-80'>
+								<Input 
+									placeholder='Search'
+									value={giphySearchText}
+									onChange={e => setGiphySearchText(e.target.value)}
+									onKeyDown={e => handleSearchGiphyWithEnter(e)}/>
+								<div id='giphy-grid' className='grid h-80 overflow-y-auto grid-cols-3 mt-4 gap-4'>
+									{
+										gifList.map((gif, index) => (
+											<div onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
+												<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width}/>
+											</div>
+										))
+									}
+								</div>
+							</PopoverContent>
+						</Popover>
 					</div>
 					<Button disabled={(input.trim() == "" || input == null) && previewImages.length == 0}
 						onClick={sendMessage}>
 						<Send />
 					</Button>
-
 				</div>
 			</div>
 		</div>

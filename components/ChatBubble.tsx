@@ -36,7 +36,9 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 			case 'text':
 				return <TextMessage message={message}/>
 			case 'image':
-				return <ImageMessage message={message}/>		
+				return <ImageMessage message={message}/>
+			case 'gif':
+				return <GiphyMessage message={message}/>		
 			default:
 				return <p>Invalid format</p>
 		}
@@ -95,6 +97,30 @@ function ImageMessage({ message }: { message: ChatMessage | ChatDate }) {
 				<Image
 					src={message.chatInfo || ""}
 					alt={message.fileName || ""}
+					className='rounded-md mb-2'
+					fill					
+				/>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+function GiphyMessage({ message }: { message: ChatMessage | ChatDate }) {
+	return (
+		<Dialog>
+			<DialogTrigger asChild>
+				<Image
+					src={message.chatInfo || ""}
+					alt={message.chatInfo || ""}
+					width={250}
+					height={250}
+					className='rounded-md'
+				/>
+			</DialogTrigger>
+			<DialogContent className='h-[75vh] w-[75vw]'>
+				<Image
+					src={message.chatInfo || ""}
+					alt={message.chatInfo || ""}
 					className='rounded-md mb-2'
 					fill					
 				/>

@@ -5,6 +5,7 @@ import { customFetch } from '@/lib/utils';
 import { TAuthUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import ReduxProvider from '@/redux/redux-provider';
+import { Tooltip, TooltipProvider } from '@radix-ui/react-tooltip';
 
 type TUserContext = {
 	user: TAuthUser | null,
@@ -84,7 +85,9 @@ export function Providers({ children }: { children: ReactNode }) {
 					enableSystem
 					disableTransitionOnChange
 				>
-					{children}
+					<TooltipProvider>
+						{children}
+					</TooltipProvider>
 				</ThemeProvider>
 			</ReduxProvider>
 		</UserContext.Provider>

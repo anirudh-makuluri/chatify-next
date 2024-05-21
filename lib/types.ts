@@ -64,3 +64,9 @@ export type TPreviewImage = {
 	url: string,
 	file : File
 }
+
+export type TGiphy = {
+	url: string,
+	height: number,
+	width: number
+}

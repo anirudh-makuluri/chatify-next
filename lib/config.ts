@@ -7,5 +7,6 @@ export const config = {
 		messagingSenderId: "1068380641937",
 		appId: "1:1068380641937:web:d9e8d7e1fc648df670fd30",
 		measurementId: "G-JPPWBR8LF2"
-	}	
+	},
+	giphyApiKey: 'evXLVY0N3HCKVTgwZEIJuR5HHUnGGIvO'	
 }
