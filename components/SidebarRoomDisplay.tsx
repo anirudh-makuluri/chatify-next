@@ -32,7 +32,8 @@ export default function SidebarRoomDisplay({ roomData }: { roomData: TRoomData }
 				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : ${lastMesage.chatInfo}`
 			case 'image':
 				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : Uploaded an image`
-		
+			case 'gif':
+				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : Uploaded a GIF`		
 			default:
 				return `${lastMesage.userUid == user.uid ? "You" : lastMesage.userName} : Sent a message`
 		}

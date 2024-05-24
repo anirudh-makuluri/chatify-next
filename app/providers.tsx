@@ -85,7 +85,7 @@ export function Providers({ children }: { children: ReactNode }) {
 					enableSystem
 					disableTransitionOnChange
 				>
-					<TooltipProvider>
+					<TooltipProvider delayDuration={100}>
 						{children}
 					</TooltipProvider>
 				</ThemeProvider>

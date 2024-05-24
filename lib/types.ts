@@ -1,5 +1,5 @@
 export type ChatMessage = {
-	chatId: number;
+	id: number;
 	roomId: string;
 	chatDocId?: string
 	type: 'text' | 'image' | 'gif' | 'file';
@@ -13,11 +13,12 @@ export type ChatMessage = {
 	time: any; //TODO: fix
 	isUserInfoDisplayed?: boolean,
 	isConsecutiveMessage?: boolean,
-	isDate?: boolean
+	isDate?: boolean;
+	reactions?: {id: string, reactors: { uid: string, name: string }[]}[]
 };
 
 export type ChatDate = {
-	chatId?: undefined;
+	id?: undefined;
 	roomId?: undefined;
 	chatDocId?: undefined
 	type?: undefined;
@@ -32,6 +33,7 @@ export type ChatDate = {
 	isUserInfoDisplayed?: undefined,
 	isConsecutiveMessage?: undefined,
 	isDate?: boolean
+	reactions?: undefined
 }
 
 export type TUser = {
@@ -57,7 +59,8 @@ export type TRoomData = {
 	roomId: string,
 	messages: (ChatMessage | ChatDate)[],
 	name: string,
-	photo_url: string
+	photo_url: string,
+	membersData: TUser[]
 }
 
 export type TPreviewImage = {
@@ -69,4 +72,13 @@ export type TGiphy = {
 	url: string,
 	height: number,
 	width: number
+}
+
+export type TReactionEvent = {
+	reactionId: string,
+	id: number,
+	chatDocId: string,
+	userUid: string,
+	roomId: string,
+	userName: string
 }
