@@ -25,7 +25,7 @@ import {
 import { useTheme } from "next-themes"
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { saveFileToStorage } from '@/lib/utils';
+import { saveFileToStorage, sleep } from '@/lib/utils';
 import { config } from '@/lib/config';
 
 export default function Room() {
@@ -47,6 +47,7 @@ export default function Room() {
 
 	const [input, setInput] = useState<string>("");
 	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom.messages.length);
+	const [isNewChatDocLoading, setIsNewChatDocLoading] = useState<Boolean>(false);
 	const [previewImages, setPreviewImages] = useState<TPreviewImage[]>([]);
 
 	const [giphySearchText, setGiphySearchText] = useState('');
@@ -64,12 +65,12 @@ export default function Room() {
 	}, [activeChatRoomId]);
 
 	useEffect(() => {
-		if (!isBottomScrollRequired()) return;
-
 		setTimeout(() => {
-			scrollToBottom();
+			if(!messagesContainerRef.current || isNewChatDocLoading) return;
 			setPrevMsgCnt(activeRoom.messages.length);
-		}, 200);
+
+			scrollToBottom();
+		}, 500);
 	}, [activeRoom.messages]);
 
 	const sendMessage = () => {
@@ -146,21 +147,27 @@ export default function Room() {
 
 	const scrollToBottom = () => {
 		if (messagesEndRef.current) {
-			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
 		}
 	};
 
 	const handleScroll = () => {
 		if (messagesContainerRef.current) {
 			const container = messagesContainerRef.current;
-			if (container.scrollTop === 0) {
+
+			if (container.scrollTop === 0) {				
+				const currentPosition = container.scrollHeight;
 				if (!socket) return;
 
+				setIsNewChatDocLoading(true);
 				const roomId = activeChatRoomId;
 				const curChatDocId = activeRoom.messages[1].chatDocId;
-				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, (response: any) => {
+				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, async (response: any) => {
 					if (response.success) {
 						dispatch(addChatDoc({ messages: response.chat_history, roomId }))
+						await sleep(100)
+						container.scrollTop = container.scrollHeight - currentPosition
+						setIsNewChatDocLoading(false);
 					} else {
 						console.log(response);
 					}
@@ -168,15 +175,6 @@ export default function Room() {
 			}
 		}
 	};
-
-	const isBottomScrollRequired = () => {
-		if (activeRoom.messages.length - prevMsgCnt <= 1) {
-			return true;
-		}
-
-
-		return false;
-	}
 
 	function onEmojiClick(e: EmojiClickData) {
 		if (textAreaRef.current == null) return;
