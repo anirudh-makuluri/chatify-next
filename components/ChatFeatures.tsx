@@ -29,6 +29,20 @@ export default function ChatFeatures({ message }: { message: ChatMessage | ChatD
 		})
 	}
 
+	function handleDeleteClick() {
+		if(!socket || !user) return;
+
+		if(message.userUid != user.uid) return;
+
+		socket.emit('chat_delete_client_to_server', {
+			id: message.id,
+			chatDocId: message.chatDocId,
+			roomId: activeChatRoomId,
+		}, (response : any) => {
+			console.log(response)
+		})
+	}
+
 	return (
 		<div>
 			<EmojiPicker
@@ -42,7 +56,7 @@ export default function ChatFeatures({ message }: { message: ChatMessage | ChatD
 					<PencilIcon />
 					<p>Edit</p>
 				</Button>
-				<Button variant={'ghost'} className='flex flex-row justify-start gap-2'>
+				<Button onClick={handleDeleteClick} variant={'ghost'} className='flex flex-row justify-start gap-2'>
 					<TrashIcon />
 					<p>Delete</p>
 				</Button>

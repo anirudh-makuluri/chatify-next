@@ -9,8 +9,8 @@ import Menubar from '@/app/home/MenuBar';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
-import { addMessage, joinChatRoom, updateChatReaction } from '@/redux/chatSlice';
-import { ChatMessage, TReactionEvent, TRoomData, TUser } from '@/lib/types';
+import { addMessage, deleteChatMessage, joinChatRoom, updateChatReaction } from '@/redux/chatSlice';
+import { ChatMessage, TDeleteEvent, TReactionEvent, TRoomData, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -104,6 +104,10 @@ export default function Page() {
 
 		socket.on('chat_reaction_server_to_client', (data : TReactionEvent) => {
 			dispatch(updateChatReaction(data))
+		})
+
+		socket.on('chat_delete_server_to_client', (data : TDeleteEvent) => {
+			dispatch(deleteChatMessage(data))
 		})
 
 		return () => {

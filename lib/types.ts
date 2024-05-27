@@ -82,3 +82,9 @@ export type TReactionEvent = {
 	roomId: string,
 	userName: string
 }
+
+export type TDeleteEvent = {
+	id: number,
+	chatDocId: string,
+	roomId: string,
+}

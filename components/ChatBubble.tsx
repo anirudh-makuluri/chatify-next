@@ -78,7 +78,7 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 	return (
 		<div className={(isSelf ? 'justify-end' : 'justify-start') + " flex my-3 relative"}>
 			<ContextMenu>
-				<ContextMenuTrigger asChild>
+				<ContextMenuTrigger disabled={!isSelf} asChild>
 					<div className='flex flex-col gap-1'>
 						{
 							(!message.isConsecutiveMessage && isGroup) && (
