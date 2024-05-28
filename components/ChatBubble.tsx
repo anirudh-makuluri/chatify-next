@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import ChatFeatures from './ChatFeatures';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from './ui/context-menu';
 import { Emoji } from 'emoji-picker-react';
-import { CheckIcon, PlusIcon, CrossIcon } from 'lucide-react';
+import { CheckIcon, PlusIcon, X } from 'lucide-react';
 import { useAppSelector } from '@/redux/store';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -142,7 +142,7 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 												<CheckIcon/>
 											</Button>
 											<Button onClick={toggleEditMode} className='w-12' variant={'destructive'}>
-												<CrossIcon/>
+												<X/>
 											</Button>
 										</div>
 									</div>
