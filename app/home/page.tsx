@@ -9,8 +9,8 @@ import Menubar from '@/app/home/MenuBar';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
-import { addMessage, deleteChatMessage, joinChatRoom, updateChatReaction } from '@/redux/chatSlice';
-import { ChatMessage, TDeleteEvent, TReactionEvent, TRoomData, TUser } from '@/lib/types';
+import { addMessage, deleteChatMessage, editChatMessage, joinChatRoom, updateChatReaction } from '@/redux/chatSlice';
+import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -110,11 +110,17 @@ export default function Page() {
 			dispatch(deleteChatMessage(data))
 		})
 
+		socket.on('chat_edit_server_to_client', (data : TEditEvent) => {
+			dispatch(editChatMessage(data))
+		})
+
 		return () => {
 			socket.off("chat_event_server_to_client");
 			socket.off("send_friend_request_server_to_client")
 			socket.off('respond_friend_request_server_to_client');
 			socket.off('chat_reaction_server_to_client');
+			socket.off('chat_delete_server_to_client');
+			socket.off('chat_edit_server_to_client');
 		}
 
 	}, [socket]);

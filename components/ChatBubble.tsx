@@ -1,6 +1,6 @@
 import { useUser } from '@/app/providers';
 import { ChatDate, ChatMessage } from '@/lib/types'
-import React from 'react'
+import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from './ui/badge';
 import Image from 'next/image';
@@ -13,13 +13,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import ChatFeatures from './ChatFeatures';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from './ui/context-menu';
 import { Emoji } from 'emoji-picker-react';
-import { PlusIcon } from 'lucide-react';
+import { CheckIcon, PlusIcon, CrossIcon } from 'lucide-react';
 import { useAppSelector } from '@/redux/store';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 export default function ChatBubble({ message, isGroup }: { message: ChatMessage | ChatDate, isGroup: boolean }) {
 	const user = useUser()?.user;
 	const socket = useAppSelector(state => state.socket.socket)
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
+
+	const [isMsgEditing, setMsgEditing] = useState(false);
+	const [editText, setEditText] = useState<string | undefined>(message.chatInfo)
 
 	if (message.isDate) {
 		return (
@@ -75,10 +80,33 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 		})
 	}
 
+
+	function toggleEditMode() {
+		setMsgEditing(prev => !prev);
+	}
+
+	function handleEditText() {
+		if(!socket || !user) return;
+
+		toggleEditMode();
+
+		if(user.uid != message.userUid) return;
+
+		socket.emit('chat_edit_client_to_server', {
+			id: message.id,
+			chatDocId: message.chatDocId,
+			roomId: activeChatRoomId,
+			newText: editText
+		}, (response: any) => {
+			console.log(response)
+		})
+
+	}
+
 	return (
 		<div className={(isSelf ? 'justify-end' : 'justify-start') + " flex my-3 relative"}>
 			<ContextMenu>
-				<ContextMenuTrigger disabled={!isSelf} asChild>
+				<ContextMenuTrigger asChild>
 					<div className='flex flex-col gap-1'>
 						{
 							(!message.isConsecutiveMessage && isGroup) && (
@@ -99,13 +127,37 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 								? 'bg-secondary ml-10' :
 								'bg-secondary ml-10 rounded-tl-none'))
 							+ " py-2 px-4 rounded-md"}>
-							{returnRequiredFormat()}
-							<p className='opacity-65 text-[10px]'>{time}</p>
+							{
+								isMsgEditing ?
+									<div className='flex flex-col gap-1'>
+										<Input 
+											value={editText} 
+											onChange={(e => setEditText(e.target.value))}
+											onKeyDown={(e) => e.keyCode === 13 && !e.shiftKey ? handleEditText() : 
+												e.keyCode === 27 ? toggleEditMode() : null
+											}
+										/>
+										<div className='flex flex-row gap-2'>
+											<Button onClick={handleEditText} className='w-12' variant={'secondary'}>
+												<CheckIcon/>
+											</Button>
+											<Button onClick={toggleEditMode} className='w-12' variant={'destructive'}>
+												<CrossIcon/>
+											</Button>
+										</div>
+									</div>
+									:
+									returnRequiredFormat()
+							}
+							<div className='flex flex-row gap-1'>
+								<p className='opacity-65 text-[10px]'>{time}</p>
+								{message.isMsgEdited && <p className='opacity-65 text-[10px] italic'>(Edited)</p>}
+							</div>
 						</div>
 					</div>
 				</ContextMenuTrigger>
 				<ContextMenuContent className='bg-card'>
-					<ChatFeatures message={message} />
+					<ChatFeatures message={message} toggleEditMode={toggleEditMode}/>
 				</ContextMenuContent>
 			</ContextMenu>
 			<div className={(isSelf ? 'right-10' : 'left-10') + ' absolute -bottom-5 flex flex-row gap-1 max-w-full overflow-x-auto'}>

@@ -6,16 +6,17 @@ import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { useTheme } from "next-themes"
 import { useAppSelector } from '@/redux/store';
 import { useUser } from '@/app/providers';
+import { ContextMenuItem } from './ui/context-menu';
 
-export default function ChatFeatures({ message }: { message: ChatMessage | ChatDate }) {
+export default function ChatFeatures({ message, toggleEditMode }: { message: ChatMessage | ChatDate, toggleEditMode: Function }) {
 	const { theme } = useTheme();
 	const { user } = useUser();
 
 	const socket = useAppSelector(state => state.socket.socket)
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
 
-	function handleEmojiClick(e : EmojiClickData) {
-		if(!socket || !user) return;
+	function handleEmojiClick(e: EmojiClickData) {
+		if (!socket || !user) return;
 
 		socket.emit('chat_reaction_client_to_server', {
 			reactionId: e.unified,
@@ -24,21 +25,21 @@ export default function ChatFeatures({ message }: { message: ChatMessage | ChatD
 			roomId: activeChatRoomId,
 			userUid: user.uid,
 			userName: user.name
-		}, (response : any) => {
+		}, (response: any) => {
 			console.log(response)
 		})
 	}
 
 	function handleDeleteClick() {
-		if(!socket || !user) return;
+		if (!socket || !user) return;
 
-		if(message.userUid != user.uid) return;
+		if (message.userUid != user.uid) return;
 
 		socket.emit('chat_delete_client_to_server', {
 			id: message.id,
 			chatDocId: message.chatDocId,
 			roomId: activeChatRoomId,
-		}, (response : any) => {
+		}, (response: any) => {
 			console.log(response)
 		})
 	}
@@ -52,18 +53,24 @@ export default function ChatFeatures({ message }: { message: ChatMessage | ChatD
 				theme={theme == undefined ? Theme.AUTO : theme == 'system' ? Theme.AUTO : theme as Theme}
 			/>
 			<div className='flex flex-col text-foreground mt-2'>
-				<Button variant={'ghost'} className='flex flex-row justify-start gap-2'>
-					<PencilIcon />
-					<p>Edit</p>
-				</Button>
-				<Button onClick={handleDeleteClick} variant={'ghost'} className='flex flex-row justify-start gap-2'>
-					<TrashIcon />
-					<p>Delete</p>
-				</Button>
-				<Button variant={'ghost'} className='flex flex-row justify-start gap-2'>
+				{
+					message.type == "text" && message.userUid == user?.uid &&
+					<ContextMenuItem onClick={() => toggleEditMode()} className='flex flex-row justify-start gap-2'>
+						<PencilIcon />
+						<p>Edit</p>
+					</ContextMenuItem>
+				}
+				{
+					message.userUid == user?.uid &&
+					<ContextMenuItem onClick={handleDeleteClick} className='flex flex-row justify-start gap-2'>
+						<TrashIcon />
+						<p>Delete</p>
+					</ContextMenuItem>
+				}
+				<ContextMenuItem className='flex flex-row justify-start gap-2'>
 					<StarIcon />
 					<p>Star</p>
-				</Button>
+				</ContextMenuItem>
 			</div>
 
 		</div>

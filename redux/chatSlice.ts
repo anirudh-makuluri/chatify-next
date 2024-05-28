@@ -1,4 +1,4 @@
-import { ChatDate, ChatMessage, TDeleteEvent, TReactionEvent, TRoomData } from "@/lib/types";
+import { ChatDate, ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData } from "@/lib/types";
 import { formatChatMessages } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from '@reduxjs/toolkit'
@@ -146,11 +146,34 @@ export const chatSlice = createSlice({
 
 			state.rooms[action.payload.roomId].messages = messages
 		},
+		editChatMessage: (state, action : PayloadAction<TEditEvent>) => {
+			const currentRoom = state.rooms[action.payload.roomId];
+
+			const messages = currentRoom.messages
+
+			const reqIdx = messages.findIndex(msg => msg.id == action.payload.id);
+			if(reqIdx == -1) return
+
+			messages[reqIdx].chatInfo = action.payload.newText
+			messages[reqIdx].isMsgEdited = true
+
+			state.rooms[action.payload.roomId].messages = messages
+		},
 		clearRoomData: (state) => {
 			state = initialState;
 		}
 	}
 })
 
-export const { setActiveRoomId, addMessage, joinChatRoom, clearRoomData, addChatDoc, updateChatReaction, deleteChatMessage } = chatSlice.actions
+export const { 
+	setActiveRoomId, 
+	addMessage, 
+	joinChatRoom, 
+	clearRoomData, 
+	addChatDoc, 
+	updateChatReaction, 
+	deleteChatMessage, 
+	editChatMessage 
+} = chatSlice.actions
+
 export const chatReducer = chatSlice.reducer

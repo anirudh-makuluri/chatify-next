@@ -88,3 +88,10 @@ export type TDeleteEvent = {
 	chatDocId: string,
 	roomId: string,
 }
+
+export type TEditEvent = {
+	id: number,
+	chatDocId: string,
+	roomId: string,
+	newText: string
+}
