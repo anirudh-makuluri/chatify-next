@@ -44,6 +44,18 @@ export default function ChatFeatures({ message, toggleEditMode }: { message: Cha
 		})
 	}
 
+	function handleStarClick() {
+		if (!socket || !user) return;
+
+		socket.emit('chat_save_client_to_server', {
+			id: message.id,
+			chatDocId: message.chatDocId,
+			roomId: activeChatRoomId,
+		}, (response: any) => {
+			console.log(response)
+		})
+	}
+
 	return (
 		<div>
 			<EmojiPicker
@@ -67,9 +79,9 @@ export default function ChatFeatures({ message, toggleEditMode }: { message: Cha
 						<p>Delete</p>
 					</ContextMenuItem>
 				}
-				<ContextMenuItem className='flex flex-row justify-start gap-2'>
-					<StarIcon />
-					<p>Star</p>
+				<ContextMenuItem onClick={handleStarClick} className='flex flex-row justify-start gap-2'>
+					<StarIcon/>
+					<p>{message.isMsgSaved ? "UnStar" : "Star"}</p>
 				</ContextMenuItem>
 			</div>
 

@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import ChatFeatures from './ChatFeatures';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from './ui/context-menu';
 import { Emoji } from 'emoji-picker-react';
-import { CheckIcon, PlusIcon, X } from 'lucide-react';
+import { CheckIcon, PlusIcon, StarIcon, X } from 'lucide-react';
 import { useAppSelector } from '@/redux/store';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -149,9 +149,10 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 									:
 									returnRequiredFormat()
 							}
-							<div className='flex flex-row gap-1'>
+							<div className='flex flex-row gap-1 items-center'>
 								<p className='opacity-65 text-[10px]'>{time}</p>
 								{message.isMsgEdited && <p className='opacity-65 text-[10px] italic'>(Edited)</p>}
+								{message.isMsgSaved && <StarIcon size={10} fill='#fff'/>}
 							</div>
 						</div>
 					</div>

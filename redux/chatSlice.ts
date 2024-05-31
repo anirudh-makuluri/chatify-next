@@ -1,4 +1,4 @@
-import { ChatDate, ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData } from "@/lib/types";
+import { ChatDate, ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent } from "@/lib/types";
 import { formatChatMessages } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from '@reduxjs/toolkit'
@@ -29,7 +29,8 @@ export const chatSlice = createSlice({
 				name: roomData.name,
 				photo_url: roomData.photo_url,
 				roomId: roomData.roomId,
-				membersData: roomData.membersData
+				membersData: roomData.membersData,
+				saved_messages: roomData.saved_messages || []
 			}
 		},
 		setActiveRoomId: (state, action: PayloadAction<string>) => {
@@ -159,6 +160,34 @@ export const chatSlice = createSlice({
 
 			state.rooms[action.payload.roomId].messages = messages
 		},
+		saveChatMessage: (state, action : PayloadAction<TSaveEvent>) => {
+			const currentRoom = state.rooms[action.payload.roomId];
+
+			const messages = currentRoom.messages
+			const savedMessages = currentRoom.saved_messages;
+
+			const reqIdx = messages.findIndex(msg => msg.id == action.payload.id);
+			if(reqIdx == -1) return
+
+			const isMsgSaved = messages[reqIdx].isMsgSaved || false;
+
+			if(isMsgSaved) {
+				messages[reqIdx].isMsgSaved = false;
+
+				const reqSavedMsgIdx = savedMessages.findIndex(msg => msg.id == action.payload.id);
+
+				if(reqSavedMsgIdx != -1) {
+					savedMessages.splice(reqSavedMsgIdx, 1);
+				}
+			} else {
+				messages[reqIdx].isMsgSaved = true;
+
+				savedMessages.push(messages[reqIdx])
+			}
+
+			state.rooms[action.payload.roomId].messages = messages
+			state.rooms[action.payload.roomId].saved_messages = savedMessages
+		},
 		clearRoomData: (state) => {
 			state = initialState;
 		}
@@ -173,7 +202,8 @@ export const {
 	addChatDoc, 
 	updateChatReaction, 
 	deleteChatMessage, 
-	editChatMessage 
+	editChatMessage,
+	saveChatMessage
 } = chatSlice.actions
 
 export const chatReducer = chatSlice.reducer

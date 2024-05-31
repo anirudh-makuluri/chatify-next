@@ -60,7 +60,8 @@ export type TRoomData = {
 	messages: (ChatMessage | ChatDate)[],
 	name: string,
 	photo_url: string,
-	membersData: TUser[]
+	membersData: TUser[],
+	saved_messages: (ChatMessage | ChatDate)[]
 }
 
 export type TPreviewImage = {
@@ -94,4 +95,10 @@ export type TEditEvent = {
 	chatDocId: string,
 	roomId: string,
 	newText: string
+}
+
+export type TSaveEvent = {
+	id: number,
+	chatDocId: string,
+	roomId: string,
 }

@@ -9,8 +9,8 @@ import Menubar from '@/app/home/MenuBar';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
-import { addMessage, deleteChatMessage, editChatMessage, joinChatRoom, updateChatReaction } from '@/redux/chatSlice';
-import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TUser } from '@/lib/types';
+import { addMessage, deleteChatMessage, editChatMessage, joinChatRoom, saveChatMessage, updateChatReaction } from '@/redux/chatSlice';
+import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -89,7 +89,8 @@ export default function Page() {
 					name: user.name,
 					photo_url: user.photo_url,
 					uid: user.uid
-				}]
+				}],
+				saved_messages: []
 			}
 			rooms.push(newRoomData);
 
@@ -114,6 +115,10 @@ export default function Page() {
 			dispatch(editChatMessage(data))
 		})
 
+		socket.on('chat_save_server_to_client', (data : TSaveEvent) => {
+			dispatch(saveChatMessage(data))
+		})
+
 		return () => {
 			socket.off("chat_event_server_to_client");
 			socket.off("send_friend_request_server_to_client")
@@ -121,6 +126,7 @@ export default function Page() {
 			socket.off('chat_reaction_server_to_client');
 			socket.off('chat_delete_server_to_client');
 			socket.off('chat_edit_server_to_client');
+			socket.off('chat_save_server_to_client');
 		}
 
 	}, [socket]);

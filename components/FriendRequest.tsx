@@ -53,7 +53,8 @@ export default function FriendRequest({ invitedUser } : { invitedUser: TUser }) 
 								photo_url: user.photo_url,
 								uid: user.uid
 							}
-						]
+						],
+						saved_messages: []
 					}
 					rooms.push(newRoomData);
 
