@@ -147,3 +147,11 @@ export async function saveFileToStorage(file: File, storagePath : string, uid : 
 			}
 		})
 }
+
+export async function sleep(ms : number) {
+	return new Promise(async (resolve) => {
+		setTimeout(() => {
+			resolve("")
+		}, ms);
+	})
+}

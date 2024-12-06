@@ -9,8 +9,8 @@ import Menubar from '@/app/home/MenuBar';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
-import { addMessage, joinChatRoom } from '@/redux/chatSlice';
-import { ChatMessage, TRoomData, TUser } from '@/lib/types';
+import { addMessage, deleteChatMessage, editChatMessage, joinChatRoom, saveChatMessage, updateChatReaction } from '@/redux/chatSlice';
+import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent, TUser } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -83,7 +83,14 @@ export default function Page() {
 				messages: [],
 				name: data.name,
 				photo_url: data.photo_url,
-				roomId: newRoomId
+				roomId: newRoomId,
+				membersData: [data, {
+					email: user.email,
+					name: user.name,
+					photo_url: user.photo_url,
+					uid: user.uid
+				}],
+				saved_messages: []
 			}
 			rooms.push(newRoomData);
 
@@ -94,12 +101,32 @@ export default function Page() {
 				friend_list: friendList,
 				rooms
 			})
+		});
+
+		socket.on('chat_reaction_server_to_client', (data : TReactionEvent) => {
+			dispatch(updateChatReaction(data))
+		})
+
+		socket.on('chat_delete_server_to_client', (data : TDeleteEvent) => {
+			dispatch(deleteChatMessage(data))
+		})
+
+		socket.on('chat_edit_server_to_client', (data : TEditEvent) => {
+			dispatch(editChatMessage(data))
+		})
+
+		socket.on('chat_save_server_to_client', (data : TSaveEvent) => {
+			dispatch(saveChatMessage(data))
 		})
 
 		return () => {
 			socket.off("chat_event_server_to_client");
 			socket.off("send_friend_request_server_to_client")
 			socket.off('respond_friend_request_server_to_client');
+			socket.off('chat_reaction_server_to_client');
+			socket.off('chat_delete_server_to_client');
+			socket.off('chat_edit_server_to_client');
+			socket.off('chat_save_server_to_client');
 		}
 
 	}, [socket]);

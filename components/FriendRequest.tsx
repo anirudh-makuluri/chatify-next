@@ -44,7 +44,17 @@ export default function FriendRequest({ invitedUser } : { invitedUser: TUser }) 
 						messages: [],
 						name: invitedUser.name,
 						photo_url: invitedUser.photo_url,
-						roomId: newRoomId
+						roomId: newRoomId,
+						membersData: [
+							invitedUser,
+							{
+								email: user.email,
+								name: user.name,
+								photo_url: user.photo_url,
+								uid: user.uid
+							}
+						],
+						saved_messages: []
 					}
 					rooms.push(newRoomData);
 

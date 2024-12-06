@@ -25,7 +25,7 @@ import {
 import { useTheme } from "next-themes"
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { saveFileToStorage } from '@/lib/utils';
+import { saveFileToStorage, sleep } from '@/lib/utils';
 import { config } from '@/lib/config';
 
 export default function Room() {
@@ -47,6 +47,7 @@ export default function Room() {
 
 	const [input, setInput] = useState<string>("");
 	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom.messages.length);
+	const [isNewChatDocLoading, setIsNewChatDocLoading] = useState<Boolean>(false);
 	const [previewImages, setPreviewImages] = useState<TPreviewImage[]>([]);
 
 	const [giphySearchText, setGiphySearchText] = useState('');
@@ -64,12 +65,12 @@ export default function Room() {
 	}, [activeChatRoomId]);
 
 	useEffect(() => {
-		if(!isBottomScrollRequired()) return;
-
 		setTimeout(() => {
-			scrollToBottom();
+			if(!messagesContainerRef.current || isNewChatDocLoading) return;
 			setPrevMsgCnt(activeRoom.messages.length);
-		}, 200);
+
+			scrollToBottom();
+		}, 500);
 	}, [activeRoom.messages]);
 
 	const sendMessage = () => {
@@ -84,12 +85,12 @@ export default function Room() {
 		}
 
 		previewImages.forEach(async (data) => {
-			const chatId = (Date.now() * Math.floor(Math.random() * 1000));
-			const storagePath = `${activeChatRoomId}/${chatId}`;
+			const id = (Date.now() * Math.floor(Math.random() * 1000));
+			const storagePath = `${activeChatRoomId}/${id}`;
 			const downloadUrl = await saveFileToStorage(data.file, storagePath, user.uid);
 
-			const chatMessage : ChatMessage = {
-				chatId,
+			const chatMessage: ChatMessage = {
+				id,
 				roomId: activeChatRoomId,
 				type: 'image',
 				chatInfo: downloadUrl,
@@ -103,10 +104,10 @@ export default function Room() {
 			dispatch(sendMessageToServer(chatMessage));
 		});
 
-		if((input.trim() == "" || input == null)) return;
+		if ((input.trim() == "" || input == null)) return;
 
 		const chatMessage: ChatMessage = {
-			chatId: (Date.now() * Math.floor(Math.random() * 1000)),
+			id: (Date.now() * Math.floor(Math.random() * 1000)),
 			roomId: activeChatRoomId,
 			type: 'text',
 			chatInfo: input,
@@ -121,7 +122,7 @@ export default function Room() {
 		setPreviewImages([])
 	}
 
-	const sendGiphy = (url : string) => {
+	const sendGiphy = (url: string) => {
 		if (!user) {
 			toast({
 				title: "Error",
@@ -130,8 +131,8 @@ export default function Room() {
 			return;
 		}
 
-		const chatMessage : ChatMessage = {
-			chatId: (Date.now() * Math.floor(Math.random() * 1000)),
+		const chatMessage: ChatMessage = {
+			id: (Date.now() * Math.floor(Math.random() * 1000)),
 			roomId: activeChatRoomId,
 			type: 'gif',
 			chatInfo: url,
@@ -146,21 +147,27 @@ export default function Room() {
 
 	const scrollToBottom = () => {
 		if (messagesEndRef.current) {
-			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
 		}
 	};
 
 	const handleScroll = () => {
 		if (messagesContainerRef.current) {
 			const container = messagesContainerRef.current;
-			if (container.scrollTop === 0) {
-				if(!socket) return;
 
+			if (container.scrollTop === 0) {				
+				const currentPosition = container.scrollHeight;
+				if (!socket) return;
+
+				setIsNewChatDocLoading(true);
 				const roomId = activeChatRoomId;
 				const curChatDocId = activeRoom.messages[1].chatDocId;
-				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, (response : any) => {
-					if(response.success) {
+				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, async (response: any) => {
+					if (response.success) {
 						dispatch(addChatDoc({ messages: response.chat_history, roomId }))
+						await sleep(100)
+						container.scrollTop = container.scrollHeight - currentPosition
+						setIsNewChatDocLoading(false);
 					} else {
 						console.log(response);
 					}
@@ -169,21 +176,12 @@ export default function Room() {
 		}
 	};
 
-	const isBottomScrollRequired = () => {
-		if(activeRoom.messages.length - prevMsgCnt <= 1) {
-			return true;
-		}
-
-
-		return false;
-	}
-
-	function onEmojiClick(e : EmojiClickData) {
-		if(textAreaRef.current == null) return;
+	function onEmojiClick(e: EmojiClickData) {
+		if (textAreaRef.current == null) return;
 
 		const cursorPosition = textAreaRef.current.selectionStart;
 		const newInput = input.slice(0, cursorPosition) + e.emoji + input.slice(cursorPosition);
-        setInput(newInput);
+		setInput(newInput);
 	}
 
 	function handleBackButton() {
@@ -195,23 +193,23 @@ export default function Room() {
 
 		imageRef.current.click();
 
-		imageRef.current.onchange = (e : any) => {
+		imageRef.current.onchange = (e: any) => {
 			const files = e.target?.files;
 			if (files) {
-				const imageData : TPreviewImage[] = Array.from(files).map((file : any) => {
+				const imageData: TPreviewImage[] = Array.from(files).map((file: any) => {
 					return {
 						url: URL.createObjectURL(file),
 						file: file
 					}
 				});
-				
+
 				const newPreviewImages = [...previewImages, ...imageData];
 				setPreviewImages(newPreviewImages);
 			}
 		}
 	}
 
-	function removePreviewImage(index : number) {
+	function removePreviewImage(index: number) {
 		let newPreviewImages = [...previewImages]
 		newPreviewImages.splice(index, 1);
 		setPreviewImages(newPreviewImages);
@@ -220,13 +218,13 @@ export default function Room() {
 
 	async function searchGiphy() {
 		const search = giphySearchText.trim()
-		const url = search.length == 0 
-			? `https://api.giphy.com/v1/gifs/trending?api_key=${config.giphyApiKey}` 
+		const url = search.length == 0
+			? `https://api.giphy.com/v1/gifs/trending?api_key=${config.giphyApiKey}`
 			: `https://api.giphy.com/v1/gifs/search?api_key=${config.giphyApiKey}&q=${search}`
-		
-		
+
+
 		const res = await fetch(url).then(res => res.json());
-		const newGifList : TGiphy[] = res.data.map((data : any) => {
+		const newGifList: TGiphy[] = res.data.map((data: any) => {
 			return {
 				url: data.images.fixed_width_downsampled.url,
 				height: data.images.fixed_width_downsampled.height,
@@ -237,18 +235,18 @@ export default function Room() {
 		setGifList(newGifList)
 	}
 
-	async function handleSearchGiphyWithEnter(e : React.KeyboardEvent<HTMLInputElement>) {
+	async function handleSearchGiphyWithEnter(e: React.KeyboardEvent<HTMLInputElement>) {
 		if (e.keyCode === 13 && !e.shiftKey) {
 			e.preventDefault();
 			searchGiphy();
-		}		
+		}
 	}
 
 	return (
 		<div className='w-full flex flex-col relative pb-4'>
 			<div className='bg-card w-full h-[10vh] px-2 flex flex-row items-center justify-start gap-4 absolute top-0'>
 				<Button onClick={handleBackButton} variant={'ghost'} className='block sm:hidden'>
-					<ArrowLeft/>
+					<ArrowLeft />
 				</Button>
 				<Avatar>
 					<AvatarImage src={activeRoom.photo_url} className='h-10 w-10 rounded-full' />
@@ -274,7 +272,7 @@ export default function Room() {
 				{
 					previewImages.map((data, index) => (
 						<div key={index} className='group relative'>
-							<Image className='rounded-md' width={64} height={64} alt='Image' src={data.url}/>
+							<Image className='rounded-md' width={64} height={64} alt='Image' src={data.url} />
 							<div onClick={() => removePreviewImage(index)} className='hidden group-hover:flex absolute top-0 right-0 cursor-pointer'>X</div>
 						</div>
 					))
@@ -304,27 +302,26 @@ export default function Room() {
 							</PopoverContent>
 						</Popover>
 						<Button onClick={openImageChoose} variant={'outline'}>
-							<ImageIcon/>
-							<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple/>
+							<ImageIcon />
+							<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
 						</Button>
 						<Popover>
 							<PopoverTrigger asChild>
 								<Button variant={'outline'}>
 									<FileCode />
-									<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className='w-80'>
-								<Input 
+								<Input
 									placeholder='Search'
 									value={giphySearchText}
 									onChange={e => setGiphySearchText(e.target.value)}
-									onKeyDown={e => handleSearchGiphyWithEnter(e)}/>
+									onKeyDown={e => handleSearchGiphyWithEnter(e)} />
 								<div id='giphy-grid' className='grid h-80 overflow-y-auto grid-cols-3 mt-4 gap-4'>
 									{
 										gifList.map((gif, index) => (
 											<div key={index} onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
-												<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width}/>
+												<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width} />
 											</div>
 										))
 									}

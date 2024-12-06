@@ -61,3 +61,33 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+
+/* Scrollbar styles using CSS variables */
+::-webkit-scrollbar {
+	width: 12px;
+	/* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+	background: hsl(var(--muted));
+	/* Background of the scrollbar track */
+	border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-thumb {
+	background: hsl(var(--primary));
+	/* Color of the scrollbar thumb */
+	border-radius: var(--radius);
+	/* Rounded corners for the scrollbar thumb */
+}
+
+.dark ::-webkit-scrollbar-track {
+	background: hsl(var(--muted));
+	/* Background of the scrollbar track in dark mode */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+	background: hsl(var(--primary));
+	/* Color of the scrollbar thumb in dark mode */
+}
