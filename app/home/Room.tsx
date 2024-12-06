@@ -309,7 +309,6 @@ export default function Room() {
 							<PopoverTrigger asChild>
 								<Button variant={'outline'}>
 									<FileCode />
-									<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className='w-80'>

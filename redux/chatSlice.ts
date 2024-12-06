@@ -115,7 +115,7 @@ export const chatSlice = createSlice({
 			} else {
 				const reqReactorIdx = reactions[reqReactionIdx].reactors.findIndex(data => data.uid == action.payload.userUid)
 
-				if (reqReactionIdx == -1) {
+				if (reqReactorIdx == -1) {
 					reactions[reqReactionIdx].reactors.push({
 						name: action.payload.userName,
 						uid: action.payload.userUid
