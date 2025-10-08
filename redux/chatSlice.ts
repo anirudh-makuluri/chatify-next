@@ -7,7 +7,8 @@ export interface IChatState {
 	activeChatRoomId: string,
 	rooms: {
 		[roomId: string]: TRoomData
-	}
+	},
+	//unreadmessages
 }
 
 const initialState: IChatState = {
@@ -35,8 +36,10 @@ export const chatSlice = createSlice({
 		},
 		setActiveRoomId: (state, action: PayloadAction<string>) => {
 			state.activeChatRoomId = action.payload
+			//unreadmessages = 0
 		},
 		addMessage: (state, action: PayloadAction<ChatMessage>) => {
+			console.log(action.payload);
 			const chatMessages = state.rooms[action.payload.roomId].messages;
 			let lastMessage = chatMessages[chatMessages.length - 1];
 
@@ -68,6 +71,8 @@ export const chatSlice = createSlice({
 					chatMessages.push(newChatDate);
 				}
 			}
+
+			//Send push notification here
 
 			state.rooms[action.payload.roomId].messages = [...chatMessages, action.payload]
 		},
@@ -190,6 +195,9 @@ export const chatSlice = createSlice({
 		},
 		clearRoomData: (state) => {
 			state = initialState;
+		},
+		incrementUnreadMessages: () => {
+			
 		}
 	}
 })

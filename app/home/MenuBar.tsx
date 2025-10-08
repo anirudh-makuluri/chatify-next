@@ -149,7 +149,7 @@ export default function MenuBar() {
 	}
 
 	return (
-		<div className='min-h-screen w-[2vw] flex flex-col justify-between items-center px-6 py-4'>
+		<div className='h-full w-[2vw] flex flex-col justify-between items-center px-6 py-4'>
 			<Dialog>
 				<DialogTrigger asChild>
 					<Button disabled={user?.received_friend_requests?.length == 0} size='icon' variant={'outline'} className='relative'>

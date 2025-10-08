@@ -15,6 +15,7 @@ import FetchedUser from '@/components/FetchedUser';
 import { useUser } from '../providers';
 import SidebarUser from '@/components/SidebarRoomDisplay';
 import { useToast } from '@/components/ui/use-toast';
+import AIAssistantButton from '@/components/AIAssistantButton';
 
 export default function Sidebar() {
 	const user = useUser()?.user;
@@ -44,10 +45,15 @@ export default function Sidebar() {
 	}
 
 	return (
-		<div className='w-full'>
-			<div className='flex flex-row gap-2 my-2 px-4'>
-				<Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder='Search or start a new chat' className='text-xs' />
-				<Button onClick={handleSubmitSearch}>Search</Button>
+		<div className='w-full h-full flex flex-col overflow-hidden'>
+			<div className='flex flex-col gap-2 my-2 px-4 flex-shrink-0'>
+				{/* AI Assistant Button */}
+				<AIAssistantButton />
+				
+				<div className='flex flex-row gap-2'>
+					<Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder='Search or start a new chat' className='text-xs' />
+					<Button onClick={handleSubmitSearch}>Search</Button>
+				</div>
 			</div>
 			<Dialog open={openFetchedUsersDialog} onOpenChange={setOpenFetchedUsersDialog}>
 				<DialogContent className="sm:max-w-[425px]">
@@ -70,22 +76,23 @@ export default function Sidebar() {
 					</div>
 				</DialogContent>
 			</Dialog>
-			{
-				user?.rooms.map((roomData, index) => (
-					<SidebarUser
-						roomData={roomData}
-						key={index}
-					/>
-				))
-			}
-			{
-				user?.rooms.length == 0 && 
-					<div className='flex flex-col justify-center items-center text-center gap-5 h-full'>
-						<p>You have no friends :(</p>
-						<p>Search for friends using the above search bar</p>
-					</div>
-			}
-
+			<div className='flex-1 overflow-y-auto'>
+				{
+					user?.rooms.map((roomData, index) => (
+						<SidebarUser
+							roomData={roomData}
+							key={index}
+						/>
+					))
+				}
+				{
+					user?.rooms.length == 0 && 
+						<div className='flex flex-col justify-center items-center text-center gap-5 h-full'>
+							<p>You have no friends :(</p>
+							<p>Search for friends using the above search bar</p>
+						</div>
+				}
+			</div>
 		</div>
 	)
 }

@@ -57,7 +57,9 @@ export default function Page() {
 		if (!socket) return;
 
 		socket.on('chat_event_server_to_client', (msg: ChatMessage) => {
+			console.log("Received message from " + msg);
 			dispatch(addMessage(msg))
+			//if activechatroomid != msg.roomid dispatch(inrecementunreadmessages)
 		})
 
 		socket.on('send_friend_request_server_to_client', (data: TUser) => {
@@ -132,13 +134,13 @@ export default function Page() {
 	}, [socket]);
 
 	return (
-		<div className='min-h-screen flex flex-row'>
+		<div className='h-screen flex flex-row overflow-hidden'>
 			{isLoadingScreenVisible && <LoadingScreen/>}
-			<div style={{ display: activeChatRoomId == '' || !isMobile ? "flex" : "none" }} className="flex flex-row sm:w-1/4 w-full">
+			<div style={{ display: activeChatRoomId == '' || !isMobile ? "flex" : "none" }} className="flex flex-row sm:w-1/4 w-full h-full">
 				<Menubar />
-				<Separator orientation='vertical' className='min-h-screen' />
+				<Separator orientation='vertical' className='h-full' />
 				<Sidebar />
-				<Separator orientation='vertical' className='min-h-screen' />
+				<Separator orientation='vertical' className='h-full' />
 			</div>
 			{isMobile && activeChatRoomId != '' && <Room/>}
 			{!isMobile && (activeChatRoomId != '' ? <Room /> : <NoActiveRoom />)}

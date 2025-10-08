@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { saveFileToStorage, sleep } from '@/lib/utils';
 import { config } from '@/lib/config';
+import AIFeatures from '@/components/AIFeatures';
 
 export default function Room() {
 	const { toast } = useToast();
@@ -52,10 +53,21 @@ export default function Room() {
 
 	const [giphySearchText, setGiphySearchText] = useState('');
 	const [gifList, setGifList] = useState<TGiphy[]>([]);
+	const [lastMessageContent, setLastMessageContent] = useState<string>('');
 
 	useEffect(() => {
 		searchGiphy();
 	}, []);
+
+	// Track last message for smart replies
+	useEffect(() => {
+		if (activeRoom && activeRoom.messages.length > 0) {
+			const lastMsg = activeRoom.messages[activeRoom.messages.length - 1];
+			if (lastMsg && !lastMsg.isDate && lastMsg.chatInfo) {
+				setLastMessageContent(lastMsg.chatInfo);
+			}
+		}
+	}, [activeRoom.messages]);
 
 	useEffect(() => {
 		if (activeChatRoomId != "") {
@@ -243,8 +255,9 @@ export default function Room() {
 	}
 
 	return (
-		<div className='w-full flex flex-col relative pb-4'>
-			<div className='bg-card w-full h-[10vh] px-2 flex flex-row items-center justify-start gap-4 absolute top-0'>
+		<div className='w-full h-full flex flex-col overflow-hidden'>
+			{/* Header */}
+			<div className='bg-card w-full px-2 py-3 flex flex-row items-center justify-start gap-4 flex-shrink-0 border-b'>
 				<Button onClick={handleBackButton} variant={'ghost'} className='block sm:hidden'>
 					<ArrowLeft />
 				</Button>
@@ -253,10 +266,12 @@ export default function Room() {
 				</Avatar>
 				<p>{activeRoom.name}</p>
 			</div>
+			
+			{/* Messages Container */}
 			<div
 				ref={messagesContainerRef}
 				onScroll={handleScroll}
-				className='mt-[12vh] h-[60vh] overflow-y-auto mx-4 mb-3'>
+				className='flex-1 overflow-y-auto px-4 py-3'>
 				{
 					activeRoom.messages.map((message, index) => (
 						<ChatBubble
@@ -268,71 +283,90 @@ export default function Room() {
 				}
 				<div ref={messagesEndRef} />
 			</div>
-			<div style={{ display: previewImages.length > 0 ? "flex" : "none" }} className='mx-4 mb-2 h-[8vh] flex flex-row gap-4'>
-				{
-					previewImages.map((data, index) => (
-						<div key={index} className='group relative'>
-							<Image className='rounded-md' width={64} height={64} alt='Image' src={data.url} />
-							<div onClick={() => removePreviewImage(index)} className='hidden group-hover:flex absolute top-0 right-0 cursor-pointer'>X</div>
-						</div>
-					))
-				}
-			</div>
-			<div className={(previewImages.length == 0 && "mt-[8vh] ") + "mx-4 h-[10vh]"}>
-				<Textarea
-					ref={textAreaRef}
-					onKeyDown={e => { if (e.key == "Enter") sendMessage() }}
-					value={input}
-					onChange={(e) => setInput(e.target.value)}
-					placeholder='Type your message here'
-				/>
-				<div className='flex justify-between my-2'>
-					<div className='gap-2 flex flex-row'>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button variant={'outline'}>
-									<SmileIcon />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className='bg-transparent border-0'>
-								<EmojiPicker
-									onEmojiClick={(e) => onEmojiClick(e)}
-									theme={theme == undefined ? Theme.AUTO : theme == 'system' ? Theme.AUTO : theme as Theme}
-								/>
-							</PopoverContent>
-						</Popover>
-						<Button onClick={openImageChoose} variant={'outline'}>
-							<ImageIcon />
-							<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
-						</Button>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button variant={'outline'}>
-									<FileCode />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className='w-80'>
-								<Input
-									placeholder='Search'
-									value={giphySearchText}
-									onChange={e => setGiphySearchText(e.target.value)}
-									onKeyDown={e => handleSearchGiphyWithEnter(e)} />
-								<div id='giphy-grid' className='grid h-80 overflow-y-auto grid-cols-3 mt-4 gap-4'>
-									{
-										gifList.map((gif, index) => (
-											<div key={index} onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
-												<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width} />
-											</div>
-										))
-									}
+			
+			{/* Input Section - Fixed at bottom */}
+			<div className='flex-shrink-0 border-t bg-card'>
+				{/* Preview Images */}
+				{previewImages.length > 0 && (
+					<div className='px-4 pt-2 flex flex-row gap-4 overflow-x-auto'>
+						{
+							previewImages.map((data, index) => (
+								<div key={index} className='group relative flex-shrink-0'>
+									<Image className='rounded-md' width={64} height={64} alt='Image' src={data.url} />
+									<div onClick={() => removePreviewImage(index)} className='hidden group-hover:flex absolute top-0 right-0 cursor-pointer'>X</div>
 								</div>
-							</PopoverContent>
-						</Popover>
+							))
+						}
 					</div>
-					<Button disabled={(input.trim() == "" || input == null) && previewImages.length == 0}
-						onClick={sendMessage}>
-						<Send />
-					</Button>
+				)}
+				
+				{/* AI Features Component */}
+				<AIFeatures 
+					input={input}
+					setInput={setInput}
+					onAISend={scrollToBottom}
+					lastMessage={lastMessageContent}
+				/>
+				
+				{/* Input Area */}
+				<div className='px-4 pb-3'>
+					<Textarea
+						ref={textAreaRef}
+						onKeyDown={e => { if (e.key == "Enter") sendMessage() }}
+						value={input}
+						onChange={(e) => setInput(e.target.value)}
+						placeholder='Type your message here'
+						className='min-h-[60px] max-h-[120px]'
+					/>
+					<div className='flex justify-between mt-2'>
+						<div className='gap-2 flex flex-row'>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button variant={'outline'} size='sm'>
+										<SmileIcon />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className='bg-transparent border-0'>
+									<EmojiPicker
+										onEmojiClick={(e) => onEmojiClick(e)}
+										theme={theme == undefined ? Theme.AUTO : theme == 'system' ? Theme.AUTO : theme as Theme}
+									/>
+								</PopoverContent>
+							</Popover>
+							<Button onClick={openImageChoose} variant={'outline'} size='sm'>
+								<ImageIcon />
+								<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
+							</Button>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button variant={'outline'} size='sm'>
+										<FileCode />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className='w-80'>
+									<Input
+										placeholder='Search'
+										value={giphySearchText}
+										onChange={e => setGiphySearchText(e.target.value)}
+										onKeyDown={e => handleSearchGiphyWithEnter(e)} />
+									<div id='giphy-grid' className='grid h-80 overflow-y-auto grid-cols-3 mt-4 gap-4'>
+										{
+											gifList.map((gif, index) => (
+												<div key={index} onClick={() => sendGiphy(gif.url)} className='hover:cursor-pointer'>
+													<Image unoptimized alt='gif' key={index} src={gif.url} height={gif.height} width={gif.width} />
+												</div>
+											))
+										}
+									</div>
+								</PopoverContent>
+							</Popover>
+						</div>
+						<Button disabled={(input.trim() == "" || input == null) && previewImages.length == 0}
+							onClick={sendMessage}
+							size='sm'>
+							<Send />
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>
