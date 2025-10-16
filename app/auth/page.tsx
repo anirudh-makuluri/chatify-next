@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import Image from 'next/image'
 import { customFetch } from "@/lib/utils";
 import LoadingScreen from "@/components/LoadingScreen";
+import { Loader2 } from 'lucide-react'
 
 
 firebase.initializeApp(config.firebaseConfig)
@@ -32,6 +33,7 @@ export default function Page() {
 	const [isSignIn, setSignIn] = useState(true);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [isAuthenticating, setIsAuthenticating] = useState(false);
 
 	useEffect(() => {
 		if(user && !isLoading) {
@@ -47,6 +49,8 @@ export default function Page() {
 
 	async function authWithGoogle() {
 		try {
+			setIsAuthenticating(true);
+			setLoadingScreenVisibility(true);
 			const { user } = await auth.signInWithPopup(provider);
 			setSession(user);
 		} catch (error) {
@@ -54,6 +58,8 @@ export default function Page() {
 			toast({
 				title: "Error occured while trying to authenticate using google"
 			})
+		} finally {
+			// keep overlay on; login() will flip isLoading later which hides it
 		}
 
 	}
@@ -67,6 +73,8 @@ export default function Page() {
 		}
 
 		try {
+			setIsAuthenticating(true);
+			setLoadingScreenVisibility(true);
 			if (isSignIn) {
 				const { user } = await firebase.auth().signInWithEmailAndPassword(email, password)
 				setSession(user);
@@ -100,6 +108,8 @@ export default function Page() {
 				title: errorMessage,
 				variant: 'destructive'
 			})
+			setIsAuthenticating(false);
+			setLoadingScreenVisibility(false);
 		}
 	}
 
@@ -120,22 +130,24 @@ export default function Page() {
 	}
 
 	return (
-		<div className="flex items-center justify-center min-h-screen">
-			{isLoadingScreenVisible && <LoadingScreen/>}
-			<Card className="p-8 w-[400px]">
-				<CardHeader className="flex flex-col justify-center items-center space-y-4">
-					<CardTitle className="text-2xl">Chatify</CardTitle>
-					<CardDescription>Upgrading your chatting experience!</CardDescription>
+		<div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-background to-muted/40 px-4">
+			{(isLoadingScreenVisible || isAuthenticating) && <LoadingScreen/>}
+			<Card className="p-8 w-full max-w-[420px] shadow-xl border border-border/60">
+				<CardHeader className="flex flex-col justify-center items-center space-y-2">
+					<CardTitle className="text-3xl font-semibold tracking-tight">Chatify</CardTitle>
+					<CardDescription className="text-center">Sign {isSignIn ? 'in' : 'up'} to supercharge your conversations</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4 flex flex-col items-center my-6">
-					<Button onClick={authWithGoogle} className="bg-transparent rounded-sm w-full gap-2" variant={'outline'}>
-						<Image
-							className="rounded-full"
-							src={'/google_logo.webp'}
-							width={20}
-							height={20}
-							alt="Google logo"
-						/>
+					<Button onClick={authWithGoogle} disabled={isAuthenticating} className="bg-transparent rounded-sm w-full gap-2" variant={'outline'}>
+						{isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin"/> : (
+							<Image
+								className="rounded-full"
+								src={'/google_logo.webp'}
+								width={20}
+								height={20}
+								alt="Google logo"
+							/>
+						)}
 						<span>{isSignIn ? "Continue" : "Sign Up"} With Google</span>
 					</Button>
 					<div className="flex flex-row w-full items-center justify-center space-x-2 rounded-xl overflow-hidden">
@@ -143,9 +155,12 @@ export default function Page() {
 						<p>or</p>
 						<Separator className="h-[1px] w-1/2 bg-primary" />
 					</div>
-					<Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter Email" />
-					<Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter Password" />
-					<Button onClick={authWithEmailAndPassword} className="w-full">{isSignIn ? "Continue" : "Sign Up"}</Button>
+					<Input disabled={isAuthenticating} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter Email" />
+					<Input disabled={isAuthenticating} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter Password" />
+					<Button disabled={isAuthenticating} onClick={authWithEmailAndPassword} className="w-full">
+						{isAuthenticating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Processing...</> : (isSignIn ? "Continue" : "Sign Up")}
+					</Button>
+					<p className="text-xs text-muted-foreground text-center">By continuing, you agree to our Terms and Privacy Policy.</p>
 				</CardContent>
 				<CardFooter className="flex flex-row items-center justify-center space-x-2">
 					<i className="text-[12px] text-center">{isSignIn ? "Don't have an account?" : "Already have an account?"}</i>

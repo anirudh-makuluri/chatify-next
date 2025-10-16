@@ -9,9 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 
 
 export const customFetch = async ({ pathName, method = 'GET', body }: {
-	pathName: string,
-	method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
-	body?: Object
+    pathName: string,
+    method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
+    body?: Object
 }): Promise<any> => {
 	return new Promise(async (resolve, reject) => {
 		const requestObj: RequestInit = {
@@ -20,12 +20,12 @@ export const customFetch = async ({ pathName, method = 'GET', body }: {
 			cache: 'no-store'
 		}
 
-		if (method == 'POST') {
-			requestObj.body = JSON.stringify(body);
-			requestObj.headers = {
-				"Content-Type": "application/json",
-			}
-		}
+        if (method !== 'GET' && body != null) {
+            requestObj.body = JSON.stringify(body);
+            requestObj.headers = {
+                "Content-Type": "application/json",
+            }
+        }
 
 		try {
 			const response = await fetch(`${globals.BACKEND_URL}/${pathName}`, requestObj);
@@ -154,4 +154,22 @@ export async function sleep(ms : number) {
 			resolve("")
 		}, ms);
 	})
+}
+
+// Group API helpers
+export const groupApi = {
+    createGroup: (uid: string, { name, photoUrl, memberUids }: { name: string, photoUrl?: string, memberUids: string[] }) =>
+        customFetch({ pathName: `users/${uid}/groups`, method: 'POST', body: { name, photoUrl, memberUids } }),
+
+    addMembers: (uid: string, roomId: string, memberUids: string[]) =>
+        customFetch({ pathName: `users/${uid}/groups/${roomId}/members`, method: 'POST', body: { memberUids } }),
+
+    removeMember: (uid: string, roomId: string, memberUid: string) =>
+        customFetch({ pathName: `users/${uid}/groups/${roomId}/members/${memberUid}`, method: 'DELETE' }),
+
+    updateInfo: (uid: string, roomId: string, { name, photoUrl }: { name?: string, photoUrl?: string }) =>
+        customFetch({ pathName: `users/${uid}/groups/${roomId}`, method: 'PATCH', body: { name, photoUrl } }),
+    
+    deleteGroup: (uid: string, roomId: string) =>
+        customFetch({ pathName: `users/${uid}/groups/${roomId}`, method: 'DELETE' }),
 }
