@@ -35,6 +35,7 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 	}
 
 	const isSelf = message.userUid == user?.uid;
+	const isAIMessage = message.userUid === 'ai-assistant';
 
 	const time = new Date(message.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
@@ -109,23 +110,34 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 				<ContextMenuTrigger asChild>
 					<div className='flex flex-col gap-1'>
 						{
-							(!message.isConsecutiveMessage && isGroup) && (
+							(!message.isConsecutiveMessage && (isGroup || isAIMessage)) && (
 								<div className={(isSelf ? 'flex-row-reverse' : "flex-row") + ' flex gap-2 items-center'}>
-									<Avatar className='h-10 w-10'>
+									<Avatar className={(isAIMessage ? 'ring-2 ring-purple-500 ' : '') + 'h-10 w-10'}>
 										<AvatarImage referrerPolicy='no-referrer' src={message.userPhoto} />
 										<AvatarFallback>{message.userName}</AvatarFallback>
 									</Avatar>
-									<p className='text-secondary-foreground'>{message.userName}</p>
+									<div className='flex items-center gap-2'>
+										<p className='text-secondary-foreground'>{message.userName}</p>
+										{isAIMessage && (
+											<Badge className='bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] px-2 py-0'>
+												AI
+											</Badge>
+										)}
+									</div>
 								</div>
 							)
 						}
-						<div className={(isSelf
+						<div className={(isAIMessage
 							? (message.isConsecutiveMessage
-								? 'bg-primary mr-10' :
-								'bg-primary mr-10 rounded-tr-none') :
-							(message.isConsecutiveMessage
-								? 'bg-secondary ml-10' :
-								'bg-secondary ml-10 rounded-tl-none'))
+								? 'ai-message-bubble ml-10' :
+								'ai-message-bubble ml-10 rounded-tl-none') :
+							(isSelf
+								? (message.isConsecutiveMessage
+									? 'bg-primary mr-10' :
+									'bg-primary mr-10 rounded-tr-none') :
+								(message.isConsecutiveMessage
+									? 'bg-secondary ml-10' :
+									'bg-secondary ml-10 rounded-tl-none')))
 							+ " py-2 px-4 rounded-md"}>
 							{
 								isMsgEditing ?

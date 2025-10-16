@@ -61,7 +61,8 @@ export type TRoomData = {
 	name: string,
 	photo_url: string,
 	membersData: TUser[],
-	saved_messages: (ChatMessage | ChatDate)[]
+	saved_messages: (ChatMessage | ChatDate)[],
+	is_ai_room?: boolean
 }
 
 export type TPreviewImage = {
@@ -101,4 +102,41 @@ export type TSaveEvent = {
 	id: number,
 	chatDocId: string,
 	roomId: string,
+}
+
+// AI Assistant Types
+export type TAIResponse = {
+	success: boolean,
+	response?: string,
+	messageId?: string,
+	error?: string
+}
+
+export type TAISummaryResponse = {
+	success: boolean,
+	summary?: string,
+	timestamp?: string,
+	error?: string
+}
+
+export type TAISentimentResponse = {
+	success: boolean,
+	sentiment?: 'positive' | 'negative' | 'neutral',
+	timestamp?: string,
+	error?: string
+}
+
+export type TAISmartRepliesResponse = {
+	success: boolean,
+	replies?: string[],
+	timestamp?: string,
+	error?: string
+}
+
+export type TAIRoomResponse = {
+	success: boolean,
+	roomId?: string,
+	message?: string,
+	room?: TRoomData,
+	error?: string
 }
