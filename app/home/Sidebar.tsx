@@ -16,6 +16,7 @@ import { useUser } from '../providers';
 import SidebarUser from '@/components/SidebarRoomDisplay';
 import { useToast } from '@/components/ui/use-toast';
 import AIAssistantButton from '@/components/AIAssistantButton';
+import CreateGroupDialog from '@/components/CreateGroupDialog';
 
 export default function Sidebar() {
 	const user = useUser()?.user;
@@ -49,7 +50,7 @@ export default function Sidebar() {
 			<div className='flex flex-col gap-2 my-2 px-4 flex-shrink-0'>
 				{/* AI Assistant Button */}
 				<AIAssistantButton />
-				
+				<CreateGroupDialog friends={user?.friend_list || []} />
 				<div className='flex flex-row gap-2'>
 					<Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder='Search or start a new chat' className='text-xs' />
 					<Button onClick={handleSubmitSearch}>Search</Button>

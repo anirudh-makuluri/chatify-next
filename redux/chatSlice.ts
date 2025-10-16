@@ -20,18 +20,18 @@ export const chatSlice = createSlice({
 	name: 'chat',
 	initialState,
 	reducers: {
-		joinChatRoom: (state, action: PayloadAction<TRoomData>) => {
+			joinChatRoom: (state, action: PayloadAction<TRoomData>) => {
 			const roomData = action.payload
 			if(state.rooms[roomData.roomId] != null) return;
-			
-			state.rooms[roomData.roomId] = {
+				
+				state.rooms[roomData.roomId] = {
 				is_group: roomData.is_group,
-				messages: formatChatMessages(roomData.messages),
+					messages: formatChatMessages(roomData.messages || []),
 				name: roomData.name,
 				photo_url: roomData.photo_url,
 				roomId: roomData.roomId,
-				membersData: roomData.membersData,
-				saved_messages: roomData.saved_messages || []
+					membersData: roomData.membersData || [],
+					saved_messages: roomData.saved_messages || []
 			}
 		},
 		setActiveRoomId: (state, action: PayloadAction<string>) => {
@@ -196,6 +196,13 @@ export const chatSlice = createSlice({
 		clearRoomData: (state) => {
 			state = initialState;
 		},
+		removeRoom: (state, action: PayloadAction<string>) => {
+			const roomId = action.payload
+			if (state.activeChatRoomId === roomId) {
+				state.activeChatRoomId = ''
+			}
+			delete state.rooms[roomId]
+		},
 		incrementUnreadMessages: () => {
 			
 		}
@@ -207,6 +214,7 @@ export const {
 	addMessage, 
 	joinChatRoom, 
 	clearRoomData, 
+	removeRoom, 
 	addChatDoc, 
 	updateChatReaction, 
 	deleteChatMessage, 

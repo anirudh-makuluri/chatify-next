@@ -28,13 +28,14 @@ import Image from 'next/image';
 import { saveFileToStorage, sleep } from '@/lib/utils';
 import { config } from '@/lib/config';
 import AIFeatures from '@/components/AIFeatures';
+import ManageGroupDialog from '@/components/ManageGroupDialog';
 
 export default function Room() {
 	const { toast } = useToast();
 	const { theme } = useTheme();
 
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
-	const activeRoom = useAppSelector(state => state.chat.rooms[activeChatRoomId]);
+	const activeRoom = useAppSelector(state => state.chat.rooms[activeChatRoomId] || {});
 	const socket = useAppSelector(state => state.socket.socket);
 
 	const dispatch = useAppDispatch();
@@ -47,7 +48,7 @@ export default function Room() {
 	const imageRef = useRef<HTMLInputElement | null>(null);
 
 	const [input, setInput] = useState<string>("");
-	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom.messages.length);
+	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom?.messages?.length || 0);
 	const [isNewChatDocLoading, setIsNewChatDocLoading] = useState<Boolean>(false);
 	const [previewImages, setPreviewImages] = useState<TPreviewImage[]>([]);
 
@@ -61,13 +62,13 @@ export default function Room() {
 
 	// Track last message for smart replies
 	useEffect(() => {
-		if (activeRoom && activeRoom.messages.length > 0) {
+		if (activeRoom && activeRoom?.messages?.length > 0) {
 			const lastMsg = activeRoom.messages[activeRoom.messages.length - 1];
 			if (lastMsg && !lastMsg.isDate && lastMsg.chatInfo) {
 				setLastMessageContent(lastMsg.chatInfo);
 			}
 		}
-	}, [activeRoom.messages]);
+	}, [activeRoom?.messages]);
 
 	useEffect(() => {
 		if (activeChatRoomId != "") {
@@ -83,7 +84,7 @@ export default function Room() {
 
 			scrollToBottom();
 		}, 500);
-	}, [activeRoom.messages]);
+	}, [activeRoom?.messages]);
 
 	const sendMessage = () => {
 		if ((input.trim() == "" || input == null) && previewImages.length == 0) return;
@@ -173,7 +174,7 @@ export default function Room() {
 
 				setIsNewChatDocLoading(true);
 				const roomId = activeChatRoomId;
-				const curChatDocId = activeRoom.messages[1].chatDocId;
+				const curChatDocId = activeRoom?.messages?.[1]?.chatDocId;
 				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, async (response: any) => {
 					if (response.success) {
 						dispatch(addChatDoc({ messages: response.chat_history, roomId }))
@@ -265,6 +266,11 @@ export default function Room() {
 					<AvatarImage src={activeRoom.photo_url} className='h-10 w-10 rounded-full' />
 				</Avatar>
 				<p>{activeRoom.name}</p>
+				{activeRoom.is_group && (
+					<div className='ml-auto'>
+						<ManageGroupDialog room={activeRoom} allFriends={useUser()?.user?.friend_list || []} />
+					</div>
+				)}
 			</div>
 			
 			{/* Messages Container */}
@@ -273,7 +279,7 @@ export default function Room() {
 				onScroll={handleScroll}
 				className='flex-1 overflow-y-auto px-4 py-3'>
 				{
-					activeRoom.messages.map((message, index) => (
+					activeRoom?.messages?.map((message, index) => (
 						<ChatBubble
 							key={index}
 							message={message}
