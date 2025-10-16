@@ -268,7 +268,7 @@ export default function Room() {
 				<p>{activeRoom.name}</p>
 				{activeRoom.is_group && (
 					<div className='ml-auto'>
-						<ManageGroupDialog room={activeRoom} allFriends={useUser()?.user?.friend_list || []} />
+						<ManageGroupDialog room={activeRoom} allFriends={user?.friend_list || []} />
 					</div>
 				)}
 			</div>
