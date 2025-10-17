@@ -25,7 +25,7 @@ import {
 import { useTheme } from "next-themes"
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { saveFileToStorage, sleep } from '@/lib/utils';
+import { saveFileToStorage, sleep, formatLastSeen } from '@/lib/utils';
 import { config } from '@/lib/config';
 import AIFeatures from '@/components/AIFeatures';
 import ManageGroupDialog from '@/components/ManageGroupDialog';
@@ -41,6 +41,15 @@ export default function Room() {
 	const dispatch = useAppDispatch();
 
 	const user = useUser()?.user;
+    const presenceText = (() => {
+        if (!user) return '';
+        const userRoom = (user.rooms || []).find(r => r.roomId === activeChatRoomId);
+        if (!userRoom || userRoom.is_group) return '';
+        const other = (userRoom.membersData || []).find((m: any) => m.uid !== user.uid);
+        if (!other) return '';
+        if (other.is_online) return 'Online';
+        return other.last_seen ? `Last seen ${formatLastSeen(other.last_seen)}` : '';
+    })();
 
 	const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -265,7 +274,10 @@ export default function Room() {
 				<Avatar>
 					<AvatarImage src={activeRoom.photo_url} className='h-10 w-10 rounded-full' />
 				</Avatar>
-				<p>{activeRoom.name}</p>
+				<div className='flex flex-col'>
+					<p>{activeRoom.name}</p>
+					{presenceText && <span className='text-xs opacity-60'>{presenceText}</span>}
+				</div>
 				{activeRoom.is_group && (
 					<div className='ml-auto'>
 						<ManageGroupDialog room={activeRoom} allFriends={user?.friend_list || []} />

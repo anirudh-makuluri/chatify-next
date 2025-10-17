@@ -173,3 +173,19 @@ export const groupApi = {
     deleteGroup: (uid: string, roomId: string) =>
         customFetch({ pathName: `users/${uid}/groups/${roomId}`, method: 'DELETE' }),
 }
+
+export function formatLastSeen(input: string | number | Date | null | undefined) {
+    if (!input) return '';
+	console.log(input);
+    const date = (input instanceof Date) ? input : new Date(typeof input === 'number' ? input : input);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+	console.log(minutes);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+}

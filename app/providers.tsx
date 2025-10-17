@@ -39,7 +39,34 @@ export function Providers({ children }: { children: ReactNode }) {
 		customFetch({ pathName: 'session' })
 			.then((data) => {
 				if (data.success) {
-					setUser(data.user)
+					// Ensure presence fields exist on user and members
+					const normalizedUser = {
+						...data.user,
+						friend_list: (data.user.friend_list || []).map((u: any) => ({
+							...u,
+							is_online: u.is_online ?? false,
+							last_seen: u.last_seen ?? null
+						})),
+						received_friend_requests: (data.user.received_friend_requests || []).map((u: any) => ({
+							...u,
+							is_online: u.is_online ?? false,
+							last_seen: u.last_seen ?? null
+						})),
+						sent_friend_requests: (data.user.sent_friend_requests || []).map((u: any) => ({
+							...u,
+							is_online: u.is_online ?? false,
+							last_seen: u.last_seen ?? null
+						})),
+						rooms: (data.user.rooms || []).map((r: any) => ({
+							...r,
+							membersData: (r.membersData || []).map((m: any) => ({
+								...m,
+								is_online: m.is_online ?? false,
+								last_seen: m.last_seen ?? null
+							}))
+						}))
+					}
+					setUser(normalizedUser)
 				}
 			})
 			.catch(error => {
