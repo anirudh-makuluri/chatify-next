@@ -10,7 +10,7 @@ import { useAppSelector, useAppDispatch } from '@/redux/store';
 import NoActiveRoom from '@/components/NoActiveRoom';
 import { initAndJoinSocketRooms, joinSocketRoom } from '@/redux/socketSlice';
 import { addMessage, deleteChatMessage, editChatMessage, joinChatRoom, saveChatMessage, updateChatReaction } from '@/redux/chatSlice';
-import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent, TUser } from '@/lib/types';
+import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent, TUser, TPresenceUpdate } from '@/lib/types';
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -55,6 +55,15 @@ export default function Page() {
 
 	useEffect(() => {
 		if (!socket) return;
+		socket.on('presence_update', (data: TPresenceUpdate) => {
+			if (!user) return;
+			const updatedFriendList = (user.friend_list || []).map(f => f.uid === data.uid ? { ...f, is_online: data.is_online, last_seen: data.last_seen } : f);
+			const updatedRooms = (user.rooms || []).map(r => ({
+				...r,
+				membersData: (r.membersData || []).map(m => m.uid === data.uid ? { ...m, is_online: data.is_online, last_seen: data.last_seen } : m)
+			}));
+			updateUser({ friend_list: updatedFriendList, rooms: updatedRooms });
+		})
 
 		socket.on('chat_event_server_to_client', (msg: ChatMessage) => {
 			console.log("Received message from " + msg);
@@ -129,6 +138,7 @@ export default function Page() {
 			socket.off('chat_delete_server_to_client');
 			socket.off('chat_edit_server_to_client');
 			socket.off('chat_save_server_to_client');
+			socket.off('presence_update');
 		}
 
 	}, [socket]);
