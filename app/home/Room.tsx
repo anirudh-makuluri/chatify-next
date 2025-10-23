@@ -6,7 +6,8 @@ import {
 	SmileIcon,
 	ArrowLeft,
 	ImageIcon,
-	FileCode
+	FileCode,
+	Clock
 } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useAppDispatch, useAppSelector } from '@/redux/store';
@@ -29,6 +30,8 @@ import { saveFileToStorage, sleep, formatLastSeen } from '@/lib/utils';
 import { config } from '@/lib/config';
 import AIFeatures from '@/components/AIFeatures';
 import ManageGroupDialog from '@/components/ManageGroupDialog';
+import ScheduleMessageDialog from '@/components/ScheduleMessageDialog';
+import ScheduledMessagesList from '@/components/ScheduledMessagesList';
 
 export default function Room() {
 	const { toast } = useToast();
@@ -378,6 +381,12 @@ export default function Room() {
 									</div>
 								</PopoverContent>
 							</Popover>
+							<ScheduleMessageDialog roomId={activeChatRoomId}>
+								<Button variant={'outline'} size='sm'>
+									<Clock />
+								</Button>
+							</ScheduleMessageDialog>
+							<ScheduledMessagesList roomId={activeChatRoomId} userUid={user?.uid || ''} />
 						</div>
 						<Button disabled={(input.trim() == "" || input == null) && previewImages.length == 0}
 							onClick={sendMessage}
