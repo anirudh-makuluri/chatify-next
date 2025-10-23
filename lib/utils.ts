@@ -176,7 +176,6 @@ export const groupApi = {
 
 export function formatLastSeen(input: string | number | Date | null | undefined) {
     if (!input) return '';
-	console.log(input);
     const date = (input instanceof Date) ? input : new Date(typeof input === 'number' ? input : input);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
