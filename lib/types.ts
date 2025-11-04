@@ -40,7 +40,9 @@ export type TUser = {
 	name: string,
 	email: string,
 	photo_url: string,
-	uid: string
+    uid: string,
+    is_online?: boolean,
+    last_seen?: string | number | null
 }
 
 export type TAuthUser = {
@@ -60,7 +62,7 @@ export type TRoomData = {
 	messages: (ChatMessage | ChatDate)[],
 	name: string,
 	photo_url: string,
-	membersData: TUser[],
+    membersData: TUser[],
 	saved_messages: (ChatMessage | ChatDate)[],
 	is_ai_room?: boolean
 }
@@ -139,4 +141,49 @@ export type TAIRoomResponse = {
 	message?: string,
 	room?: TRoomData,
 	error?: string
+}
+
+export type TPresenceUpdate = {
+    uid: string,
+    is_online: boolean,
+    last_seen: string | number | null
+}
+
+// Scheduled Messages Types
+export type TScheduledMessage = {
+    id: string;
+    userUid: string;
+    roomId: string;
+    message: string;
+    messageType: 'text' | 'image' | 'gif' | 'file';
+    fileName?: string;
+    scheduledTime: Date;
+    createdAt: Date;
+    status: 'pending' | 'sent' | 'cancelled';
+    recurring: boolean;
+    recurringPattern?: 'daily' | 'weekly' | 'monthly';
+    timezone: string;
+    userName: string;
+    userPhoto: string;
+    sentAt?: Date;
+}
+
+export type TScheduleMessageRequest = {
+    userUid: string;
+    roomId: string;
+    message: string;
+    messageType?: 'text' | 'image' | 'gif' | 'file';
+    fileName?: string;
+    scheduledTime: string; // ISO string
+    recurring?: boolean;
+    recurringPattern?: 'daily' | 'weekly' | 'monthly';
+    timezone?: string;
+}
+
+export type TUpdateScheduledMessageRequest = {
+    message?: string;
+    scheduledTime?: string; // ISO string
+    recurring?: boolean;
+    recurringPattern?: 'daily' | 'weekly' | 'monthly';
+    timezone?: string;
 }
