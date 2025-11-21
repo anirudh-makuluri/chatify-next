@@ -1,3 +1,3 @@
 export const globals = {
-	BACKEND_URL: 'http://localhost:5000'
+	BACKEND_URL: 'https://chatify-backend-parb.onrender.com'
 }
