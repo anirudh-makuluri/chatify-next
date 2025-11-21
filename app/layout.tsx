@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Sora, Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ["latin"] });
+const sora = Sora({ 
+	subsets: ["latin"],
+	variable: "--font-sora",
+	display: "swap",
+});
+
+const outfit = Outfit({ 
+	subsets: ["latin"],
+	variable: "--font-outfit",
+	display: "swap",
+});
 
 export const metadata: Metadata = {
 	title: "Chatify",
@@ -18,7 +28,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={inter.className}>
+			<body className={`${sora.variable} ${outfit.variable} font-sans`}>
 				<Providers>
 					{children}
 				</Providers>

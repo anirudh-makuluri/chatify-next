@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { config } from "@/lib/config";
 import { useUser } from "@/app/providers";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Users, Zap, Sparkles, ArrowRight, Bot } from "lucide-react";
+import { MessageCircle, Users, Zap, Sparkles, ArrowRight, Bot, Clock, Brain } from "lucide-react";
 import { useEffect, useState } from "react";
 
 
@@ -34,93 +34,157 @@ export default function Home() {
 		{
 			icon: MessageCircle,
 			title: "Real-time Messaging",
-			description: "Chat instantly with friends and colleagues"
+			description: "Instant communication with zero latency",
+			color: "from-cyan-400 to-blue-500"
 		},
 		{
 			icon: Bot,
 			title: "AI Assistant",
-			description: "Get smart replies and conversation summaries"
+			description: "Intelligent conversations powered by AI",
+			color: "from-purple-400 to-pink-500"
 		},
 		{
 			icon: Users,
 			title: "Group Chats",
-			description: "Connect with multiple people at once"
+			description: "Connect with teams and communities",
+			color: "from-orange-400 to-red-500"
 		},
 		{
 			icon: Zap,
 			title: "Lightning Fast",
-			description: "Experience seamless, lag-free conversations"
+			description: "Optimized for speed and performance",
+			color: "from-yellow-400 to-orange-500"
 		}
 	];
 
+	const stats = [
+		{ icon: Clock, label: "Response Time", value: "< 50ms" },
+		{ icon: Brain, label: "Intelligence", value: "AI Powered" }
+	];
+
 	return (
-		<div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-			{/* Animated Background Elements */}
-			<div className="absolute inset-0 overflow-hidden">
-				<div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-				<div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-				<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+		<div className="relative flex items-center justify-center min-h-screen overflow-auto">
+			{/* Unique Mesh Gradient Background */}
+			<div 
+				className="absolute inset-0 animate-mesh"
+				style={{
+					background: `
+						radial-gradient(at 0% 0%, hsl(195, 85%, 25%) 0px, transparent 50%),
+						radial-gradient(at 100% 0%, hsl(270, 70%, 35%) 0px, transparent 50%),
+						radial-gradient(at 100% 100%, hsl(25, 95%, 30%) 0px, transparent 50%),
+						radial-gradient(at 0% 100%, hsl(195, 85%, 20%) 0px, transparent 50%),
+						linear-gradient(135deg, hsl(220, 30%, 8%) 0%, hsl(230, 25%, 12%) 50%, hsl(240, 20%, 10%) 100%)
+					`
+				}}
+			/>
+
+			{/* Animated Geometric Shapes */}
+			<div className="absolute inset-0 overflow-hidden pointer-events-none">
+				{/* Floating Orbs */}
+				<div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl animate-float" />
+				<div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-float animation-delay-2000" />
+				<div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-float animation-delay-4000" />
+				
+				{/* Grid Pattern Overlay */}
+				<div 
+					className="absolute inset-0 opacity-[0.03]"
+					style={{
+						backgroundImage: `
+							linear-gradient(rgba(195, 85%, 55%, 0.1) 1px, transparent 1px),
+							linear-gradient(90deg, rgba(195, 85%, 55%, 0.1) 1px, transparent 1px)
+						`,
+						backgroundSize: '50px 50px'
+					}}
+				/>
 			</div>
 
 			{/* Content */}
-			<div className="relative z-10 flex flex-col items-center justify-center px-4 py-16 max-w-6xl mx-auto">
+			<div className="relative z-10 flex flex-col items-center justify-center px-4 py-16 max-w-7xl mx-auto w-full">
 				{/* Hero Section */}
-				<div className={`text-center mb-16 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-					<div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 animate-fade-in">
-						<Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
-						<span className="text-sm font-medium text-white">Powered by AI</span>
+				<div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+					{/* Badge */}
+					<div 
+						className={`inline-flex items-center gap-2 px-5 py-2.5 mb-8 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-md border border-cyan-500/30 animate-scale-in ${isVisible ? 'animate-scale-in' : ''}`}
+						style={{ animationDelay: '0ms' }}
+					>
+						<Sparkles className="w-4 h-4 text-cyan-400 animate-pulse-glow" />
+						<span className="text-sm font-medium text-cyan-300 font-heading">
+							Powered by Advanced AI
+						</span>
 					</div>
 					
-					<h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-slide-up">
-						Welcome to{" "}
-						<span className="bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 text-transparent bg-clip-text animate-gradient">
-							Chatify
-						</span>
+					{/* Main Heading */}
+					<h1 
+						className={`text-6xl md:text-8xl lg:text-9xl font-bold mb-8 animate-slide-up font-heading ${isVisible ? 'animate-slide-up' : ''}`}
+						style={{ 
+							animationDelay: '200ms',
+							background: 'linear-gradient(135deg, hsl(195, 85%, 65%) 0%, hsl(270, 70%, 70%) 50%, hsl(25, 95%, 65%) 100%)',
+							WebkitBackgroundClip: 'text',
+							WebkitTextFillColor: 'transparent',
+							backgroundClip: 'text',
+							textShadow: '0 0 40px rgba(195, 85%, 55%, 0.3)'
+						}}
+					>
+						Chatify
 					</h1>
 					
-					<p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto animate-slide-up animation-delay-200">
-						Connect, collaborate, and chat effortlessly with intelligent conversations
+					{/* Subtitle */}
+					<p 
+						className={`text-xl md:text-2xl lg:text-3xl text-cyan-100/90 mb-12 max-w-3xl mx-auto font-light leading-relaxed animate-slide-up ${isVisible ? 'animate-slide-up' : ''}`}
+						style={{ 
+							animationDelay: '400ms'
+						}}
+					>
+						Where conversations come alive with intelligence, speed, and seamless connection
 					</p>
 
-					<div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up animation-delay-400">
+					{/* CTA Button */}
+					<div 
+						className={`flex flex-col sm:flex-row gap-5 justify-center items-center animate-slide-up ${isVisible ? 'animate-slide-up' : ''}`}
+						style={{ animationDelay: '600ms' }}
+					>
 						<Button 
 							onClick={navigateToNextPage}
 							size="lg"
-							className="group relative px-8 py-6 text-lg font-semibold bg-white text-purple-600 hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-purple-500/50"
+							className="group relative px-10 py-7 text-lg font-semibold overflow-hidden rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-900 hover:from-cyan-400 hover:to-blue-500 transform hover:scale-105 transition-all duration-300 shadow-2xl shadow-cyan-500/50 hover:shadow-cyan-500/70 font-heading"
 						>
-							{user ? "Continue to Chat" : "Get Started"}
-							<ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-						</Button>
-						
-						<Button 
-							variant="outline"
-							size="lg"
-							className="px-8 py-6 text-lg font-semibold bg-transparent text-white border-2 border-white/30 hover:bg-white/10 hover:border-white/50 backdrop-blur-sm transform hover:scale-105 transition-all duration-300"
-							onClick={() => {
-								const featuresSection = document.getElementById('features');
-								featuresSection?.scrollIntoView({ behavior: 'smooth' });
-							}}
-						>
-							Learn More
+							<span className="relative z-10 flex items-center gap-2">
+								{user ? "Continue to Chat" : "Get Started"}
+								<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+							</span>
+							<div className="absolute inset-0 animate-shimmer" />
 						</Button>
 					</div>
 				</div>
 
 				{/* Features Grid */}
-				<div id="features" className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full transition-all duration-1000 delay-500 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+				<div 
+					id="features" 
+					className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mb-20 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+				>
 					{features.map((feature, index) => (
 						<div
 							key={index}
-							className="group p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 cursor-pointer"
-							style={{ animationDelay: `${index * 100}ms` }}
+							className="group relative p-8 rounded-2xl bg-gradient-to-br from-slate-900/40 to-slate-800/20 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 cursor-pointer overflow-hidden animate-scale-in"
+							style={{ 
+								animationDelay: `${800 + index * 100}ms`
+							}}
 						>
-							<div className="w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-								<feature.icon className="w-6 h-6 text-white" />
+							{/* Gradient Overlay on Hover */}
+							<div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+							
+							{/* Icon */}
+							<div className={`relative w-14 h-14 mb-6 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg`}>
+								<feature.icon className="w-7 h-7 text-white" />
 							</div>
-							<h3 className="text-lg font-semibold text-white mb-2">
+							
+							{/* Content */}
+							<h3 
+								className="text-xl font-bold text-cyan-100 mb-3 group-hover:text-white transition-colors font-heading"
+							>
 								{feature.title}
 							</h3>
-							<p className="text-white/70 text-sm">
+							<p className="text-cyan-200/70 text-sm leading-relaxed">
 								{feature.description}
 							</p>
 						</div>
@@ -128,25 +192,28 @@ export default function Home() {
 				</div>
 
 				{/* Stats Section */}
-				<div className={`mt-16 grid grid-cols-3 gap-8 w-full max-w-3xl transition-all duration-1000 delay-700 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-					<div className="text-center">
-						<div className="text-4xl md:text-5xl font-bold text-white mb-2 animate-count-up">
-							Fast
+				<div 
+					className={`grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-20 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+				>
+					{stats.map((stat, index) => (
+						<div 
+							key={index}
+							className="text-center p-8 rounded-2xl bg-gradient-to-br from-slate-900/30 to-slate-800/10 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-500 animate-scale-in"
+							style={{ 
+								animationDelay: `${1200 + index * 100}ms`
+							}}
+						>
+							<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center border border-cyan-500/30">
+								<stat.icon className="w-8 h-8 text-cyan-400" />
+							</div>
+							<div className="text-3xl md:text-4xl font-bold text-cyan-300 mb-2 font-heading">
+								{stat.value}
+							</div>
+							<div className="text-cyan-200/60 text-sm uppercase tracking-wider">
+								{stat.label}
+							</div>
 						</div>
-						<div className="text-white/70 text-sm">Response Time</div>
-					</div>
-					<div className="text-center">
-						<div className="text-4xl md:text-5xl font-bold text-white mb-2 animate-count-up">
-							Secure
-						</div>
-						<div className="text-white/70 text-sm">End-to-End</div>
-					</div>
-					<div className="text-center">
-						<div className="text-4xl md:text-5xl font-bold text-white mb-2 animate-count-up">
-							Smart
-						</div>
-						<div className="text-white/70 text-sm">AI Powered</div>
-					</div>
+					))}
 				</div>
 			</div>
 		</div>
