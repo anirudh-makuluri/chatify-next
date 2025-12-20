@@ -10,57 +10,88 @@
 		--font-heading: var(--font-sora);
 		--font-body: var(--font-outfit);
 		
-		/* Unique Color Palette - Deep Ocean with Electric Accents */
-		--background: 220 30% 8%;
-		--foreground: 210 20% 95%;
-		--card: 220 25% 12%;
-		--card-foreground: 210 20% 95%;
-		--popover: 220 25% 10%;
-		--popover-foreground: 210 20% 95%;
-		--primary: 195 85% 55%;
-		--primary-foreground: 220 30% 8%;
-		--secondary: 220 20% 18%;
-		--secondary-foreground: 210 20% 95%;
-		--muted: 220 20% 15%;
-		--muted-foreground: 210 15% 65%;
-		--accent: 25 95% 60%;
-		--accent-foreground: 220 30% 8%;
+		/* Light Mode Color Palette - Blue Theme */
+		--background: 0 0% 100%;
+		--foreground: 222 47% 11%;
+		--card: 0 0% 100%;
+		--card-foreground: 222 47% 11%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 222 47% 11%;
+		--primary: 217 91% 60%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 210 40% 96%;
+		--secondary-foreground: 222 47% 11%;
+		--muted: 210 40% 96%;
+		--muted-foreground: 215 16% 47%;
+		--accent: 217 91% 60%;
+		--accent-foreground: 0 0% 100%;
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 0 0% 98%;
-		--border: 220 20% 20%;
-		--input: 220 20% 20%;
-		--ring: 195 85% 55%;
+		--border: 214 32% 91%;
+		--input: 214 32% 91%;
+		--ring: 217 91% 60%;
 		--radius: 0.75rem;
 		
-		/* Landing Page Specific Colors */
-		--landing-bg-start: 220 30% 8%;
-		--landing-bg-mid: 230 25% 12%;
-		--landing-bg-end: 240 20% 10%;
+		/* Landing Page Specific Colors - Light Mode */
+		--landing-bg-start: 214 100% 97%;
+		--landing-bg-mid: 214 100% 99%;
+		--landing-bg-end: 214 100% 100%;
 		--landing-accent-cyan: 195 85% 55%;
-		--landing-accent-orange: 25 95% 60%;
-		--landing-accent-purple: 270 70% 65%;
+		--landing-accent-blue: 217 91% 60%;
+		--landing-accent-indigo: 239 84% 67%;
+	}
+
+	.light {
+		--background: 0 0% 100%;
+		--foreground: 222 47% 11%;
+		--card: 0 0% 100%;
+		--card-foreground: 222 47% 11%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 222 47% 11%;
+		--primary: 217 91% 60%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 210 40% 96%;
+		--secondary-foreground: 222 47% 11%;
+		--muted: 210 40% 96%;
+		--muted-foreground: 215 16% 47%;
+		--accent: 217 91% 60%;
+		--accent-foreground: 0 0% 100%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 214 32% 91%;
+		--input: 214 32% 91%;
+		--ring: 217 91% 60%;
 	}
 
 	.dark {
-		--background: 220 30% 8%;
-		--foreground: 210 20% 95%;
-		--card: 220 25% 12%;
-		--card-foreground: 210 20% 95%;
-		--popover: 220 25% 10%;
-		--popover-foreground: 210 20% 95%;
-		--primary: 195 85% 55%;
-		--primary-foreground: 220 30% 8%;
-		--secondary: 220 20% 18%;
-		--secondary-foreground: 210 20% 95%;
-		--muted: 220 20% 15%;
-		--muted-foreground: 210 15% 65%;
-		--accent: 25 95% 60%;
-		--accent-foreground: 220 30% 8%;
+		/* Dark Mode Color Palette - Blue Theme */
+		--background: 222 47% 11%;
+		--foreground: 213 31% 91%;
+		--card: 222 47% 11%;
+		--card-foreground: 213 31% 91%;
+		--popover: 222 47% 11%;
+		--popover-foreground: 213 31% 91%;
+		--primary: 217 91% 60%;
+		--primary-foreground: 222 47% 11%;
+		--secondary: 217 33% 17%;
+		--secondary-foreground: 213 31% 91%;
+		--muted: 217 33% 17%;
+		--muted-foreground: 215 20% 65%;
+		--accent: 217 91% 60%;
+		--accent-foreground: 222 47% 11%;
 		--destructive: 0 62.8% 30.6%;
 		--destructive-foreground: 0 85.7% 97.3%;
-		--border: 220 20% 20%;
-		--input: 220 20% 20%;
-		--ring: 195 85% 55%;
+		--border: 217 33% 17%;
+		--input: 217 33% 17%;
+		--ring: 217 91% 60%;
+		
+		/* Landing Page Specific Colors - Dark Mode */
+		--landing-bg-start: 222 47% 11%;
+		--landing-bg-mid: 217 33% 17%;
+		--landing-bg-end: 222 47% 8%;
+		--landing-accent-cyan: 195 85% 55%;
+		--landing-accent-blue: 217 91% 60%;
+		--landing-accent-indigo: 239 84% 67%;
 	}
 }
 
@@ -105,6 +136,16 @@
 	/* Rounded corners for the scrollbar thumb */
 }
 
+.light ::-webkit-scrollbar-track {
+	background: hsl(var(--muted));
+	/* Background of the scrollbar track in light mode */
+}
+
+.light ::-webkit-scrollbar-thumb {
+	background: hsl(var(--primary));
+	/* Color of the scrollbar thumb in light mode */
+}
+
 .dark ::-webkit-scrollbar-track {
 	background: hsl(var(--muted));
 	/* Background of the scrollbar track in dark mode */
@@ -117,13 +158,18 @@
 
 /* AI Assistant Styles */
 .ai-message-bubble {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(239, 84%, 67%) 100%);
 	color: white;
 	animation: slideIn 0.3s ease-out;
 }
 
 .dark .ai-message-bubble {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(239, 84%, 67%) 100%);
+	color: white;
+}
+
+.light .ai-message-bubble {
+	background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(239, 84%, 67%) 100%);
 	color: white;
 }
 

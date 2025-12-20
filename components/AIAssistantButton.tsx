@@ -97,7 +97,7 @@ export default function AIAssistantButton() {
 		<Button
 			onClick={createAndOpenAIRoom}
 			disabled={isCreating}
-			className="w-full mb-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+			className="w-full mb-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
 			size="lg"
 		>
 			{isCreating ? (

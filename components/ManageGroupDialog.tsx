@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { useUser } from '@/app/providers'
@@ -10,6 +10,7 @@ import { AvatarImage } from '@radix-ui/react-avatar'
 import { TRoomData, TUser } from '@/lib/types'
 import { useAppDispatch } from '@/redux/store'
 import { removeRoom, setActiveRoomId } from '@/redux/chatSlice'
+import { AlertTriangle } from 'lucide-react'
 
 type Props = {
     room: TRoomData
@@ -17,11 +18,13 @@ type Props = {
 }
 
 export default function ManageGroupDialog({ room, allFriends = [] }: Props) {
-    const { user } = useUser()
+    const { user, updateUser } = useUser()
     const { toast } = useToast()
     const dispatch = useAppDispatch()
 
     const [open, setOpen] = useState(false)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [name, setName] = useState(room.name)
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [selected, setSelected] = useState<Record<string, boolean>>(() => {
@@ -61,20 +64,33 @@ export default function ManageGroupDialog({ room, allFriends = [] }: Props) {
         }
     }
 
+    function handleDeleteClick() {
+        setShowDeleteConfirm(true)
+    }
+
     async function onDeleteGroup() {
         if (!user) return
+        setIsDeleting(true)
         try {
             const res = await groupApi.deleteGroup(user.uid, room.roomId)
             if (res?.success) {
                 dispatch(removeRoom(room.roomId))
                 dispatch(setActiveRoomId(''))
+                
+                // Update user context to remove the room from user.rooms
+                const updatedRooms = (user.rooms || []).filter(r => r.roomId !== room.roomId)
+                updateUser({ rooms: updatedRooms })
+                
                 toast({ description: 'Group deleted' })
+                setShowDeleteConfirm(false)
                 setOpen(false)
             } else {
                 toast({ title: 'Delete failed', description: res?.error || 'Unknown error', variant: 'destructive' })
             }
         } catch (e: any) {
             toast({ title: 'Delete failed', description: e?.message || 'Unknown error', variant: 'destructive' })
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -118,10 +134,50 @@ export default function ManageGroupDialog({ room, allFriends = [] }: Props) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant={'destructive'} onClick={onDeleteGroup}>Delete group</Button>
+                    <Button variant={'destructive'} onClick={handleDeleteClick}>Delete group</Button>
                     <Button onClick={() => setOpen(false)}>Close</Button>
                 </DialogFooter>
             </DialogContent>
+            
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+                                <AlertTriangle className="h-5 w-5 text-destructive" />
+                            </div>
+                            <div>
+                                <DialogTitle>Delete Group</DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    Are you sure you want to delete this group?
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-sm text-muted-foreground">
+                            This action cannot be undone. All messages and data associated with <strong>"{room.name}"</strong> will be permanently deleted.
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setShowDeleteConfirm(false)}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="destructive" 
+                            onClick={onDeleteGroup}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete Group'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     )
 }

@@ -17,7 +17,7 @@ type Props = {
 }
 
 export default function CreateGroupDialog({ friends = [] }: Props) {
-    const { user } = useUser()
+    const { user, updateUser } = useUser()
     const { toast } = useToast()
     const dispatch = useAppDispatch()
     const rooms = useAppSelector(s => s.chat.rooms)
@@ -66,6 +66,13 @@ export default function CreateGroupDialog({ friends = [] }: Props) {
                 dispatch(joinSocketRoom(res.roomId))
                 dispatch(joinChatRoom(safeRoom))
                 dispatch(setActiveRoomId(res.roomId))
+                
+                // Update user context to add the new room to user.rooms
+                if (user) {
+                    const updatedRooms = [...(user.rooms || []), safeRoom]
+                    updateUser({ rooms: updatedRooms })
+                }
+                
                 setOpen(false)
                 setName('')
                 setSelected({})

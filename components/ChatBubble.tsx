@@ -112,14 +112,14 @@ export default function ChatBubble({ message, isGroup }: { message: ChatMessage 
 						{
 							(!message.isConsecutiveMessage && (isGroup || isAIMessage)) && (
 								<div className={(isSelf ? 'flex-row-reverse' : "flex-row") + ' flex gap-2 items-center'}>
-									<Avatar className={(isAIMessage ? 'ring-2 ring-purple-500 ' : '') + 'h-10 w-10'}>
+									<Avatar className={(isAIMessage ? 'ring-2 ring-blue-500 ' : '') + 'h-10 w-10'}>
 										<AvatarImage referrerPolicy='no-referrer' src={message.userPhoto} />
 										<AvatarFallback>{message.userName}</AvatarFallback>
 									</Avatar>
 									<div className='flex items-center gap-2'>
 										<p className='text-secondary-foreground'>{message.userName}</p>
 										{isAIMessage && (
-											<Badge className='bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] px-2 py-0'>
+											<Badge className='bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] px-2 py-0'>
 												AI
 											</Badge>
 										)}
