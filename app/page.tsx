@@ -41,19 +41,19 @@ export default function Home() {
 			icon: Bot,
 			title: "AI Assistant",
 			description: "Intelligent conversations powered by AI",
-			color: "from-purple-400 to-pink-500"
+			color: "from-blue-500 to-indigo-500"
 		},
 		{
 			icon: Users,
 			title: "Group Chats",
 			description: "Connect with teams and communities",
-			color: "from-orange-400 to-red-500"
+			color: "from-blue-400 to-cyan-500"
 		},
 		{
 			icon: Zap,
 			title: "Lightning Fast",
 			description: "Optimized for speed and performance",
-			color: "from-yellow-400 to-orange-500"
+			color: "from-indigo-500 to-blue-600"
 		}
 	];
 
@@ -66,14 +66,14 @@ export default function Home() {
 		<div className="relative flex items-center justify-center min-h-screen overflow-auto">
 			{/* Unique Mesh Gradient Background */}
 			<div 
-				className="absolute inset-0 animate-mesh"
+				className="absolute inset-0 animate-mesh dark:opacity-100 opacity-50"
 				style={{
 					background: `
-						radial-gradient(at 0% 0%, hsl(195, 85%, 25%) 0px, transparent 50%),
-						radial-gradient(at 100% 0%, hsl(270, 70%, 35%) 0px, transparent 50%),
-						radial-gradient(at 100% 100%, hsl(25, 95%, 30%) 0px, transparent 50%),
-						radial-gradient(at 0% 100%, hsl(195, 85%, 20%) 0px, transparent 50%),
-						linear-gradient(135deg, hsl(220, 30%, 8%) 0%, hsl(230, 25%, 12%) 50%, hsl(240, 20%, 10%) 100%)
+						radial-gradient(at 0% 0%, hsl(217, 91%, 25%) 0px, transparent 50%),
+						radial-gradient(at 100% 0%, hsl(239, 84%, 35%) 0px, transparent 50%),
+						radial-gradient(at 100% 100%, hsl(195, 85%, 30%) 0px, transparent 50%),
+						radial-gradient(at 0% 100%, hsl(217, 91%, 20%) 0px, transparent 50%),
+						linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--background)) 50%, hsl(var(--background)) 100%)
 					`
 				}}
 			/>
@@ -82,8 +82,8 @@ export default function Home() {
 			<div className="absolute inset-0 overflow-hidden pointer-events-none">
 				{/* Floating Orbs */}
 				<div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl animate-float" />
-				<div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-float animation-delay-2000" />
-				<div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-float animation-delay-4000" />
+				<div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float animation-delay-2000" />
+				<div className="absolute top-1/2 left-1/3 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-float animation-delay-4000" />
 				
 				{/* Grid Pattern Overlay */}
 				<div 
@@ -104,11 +104,11 @@ export default function Home() {
 				<div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
 					{/* Badge */}
 					<div 
-						className={`inline-flex items-center gap-2 px-5 py-2.5 mb-8 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-md border border-cyan-500/30 animate-scale-in ${isVisible ? 'animate-scale-in' : ''}`}
+						className={`inline-flex items-center gap-2 px-5 py-2.5 mb-8 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 animate-scale-in ${isVisible ? 'animate-scale-in' : ''}`}
 						style={{ animationDelay: '0ms' }}
 					>
-						<Sparkles className="w-4 h-4 text-cyan-400 animate-pulse-glow" />
-						<span className="text-sm font-medium text-cyan-300 font-heading">
+						<Sparkles className="w-4 h-4 text-cyan-400 dark:text-cyan-300 text-cyan-600 animate-pulse-glow" />
+						<span className="text-sm font-medium text-cyan-600 dark:text-cyan-300 font-heading">
 							Powered by Advanced AI
 						</span>
 					</div>
@@ -118,11 +118,11 @@ export default function Home() {
 						className={`text-6xl md:text-8xl lg:text-9xl font-bold mb-8 animate-slide-up font-heading ${isVisible ? 'animate-slide-up' : ''}`}
 						style={{ 
 							animationDelay: '200ms',
-							background: 'linear-gradient(135deg, hsl(195, 85%, 65%) 0%, hsl(270, 70%, 70%) 50%, hsl(25, 95%, 65%) 100%)',
+							background: 'linear-gradient(135deg, hsl(217, 91%, 65%) 0%, hsl(239, 84%, 70%) 50%, hsl(195, 85%, 65%) 100%)',
 							WebkitBackgroundClip: 'text',
 							WebkitTextFillColor: 'transparent',
 							backgroundClip: 'text',
-							textShadow: '0 0 40px rgba(195, 85%, 55%, 0.3)'
+							textShadow: '0 0 40px rgba(217, 91%, 60%, 0.3)'
 						}}
 					>
 						Chatify
@@ -130,7 +130,7 @@ export default function Home() {
 					
 					{/* Subtitle */}
 					<p 
-						className={`text-xl md:text-2xl lg:text-3xl text-cyan-100/90 mb-12 max-w-3xl mx-auto font-light leading-relaxed animate-slide-up ${isVisible ? 'animate-slide-up' : ''}`}
+						className={`text-xl md:text-2xl lg:text-3xl text-foreground/80 mb-12 max-w-3xl mx-auto font-light leading-relaxed animate-slide-up ${isVisible ? 'animate-slide-up' : ''}`}
 						style={{ 
 							animationDelay: '400ms'
 						}}
@@ -165,7 +165,7 @@ export default function Home() {
 					{features.map((feature, index) => (
 						<div
 							key={index}
-							className="group relative p-8 rounded-2xl bg-gradient-to-br from-slate-900/40 to-slate-800/20 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 cursor-pointer overflow-hidden animate-scale-in"
+							className="group relative p-8 rounded-2xl bg-card/80 backdrop-blur-xl border border-primary/20 hover:border-primary/40 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 cursor-pointer overflow-hidden animate-scale-in"
 							style={{ 
 								animationDelay: `${800 + index * 100}ms`
 							}}
@@ -180,11 +180,11 @@ export default function Home() {
 							
 							{/* Content */}
 							<h3 
-								className="text-xl font-bold text-cyan-100 mb-3 group-hover:text-white transition-colors font-heading"
+								className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors font-heading"
 							>
 								{feature.title}
 							</h3>
-							<p className="text-cyan-200/70 text-sm leading-relaxed">
+							<p className="text-muted-foreground text-sm leading-relaxed">
 								{feature.description}
 							</p>
 						</div>
@@ -198,18 +198,18 @@ export default function Home() {
 					{stats.map((stat, index) => (
 						<div 
 							key={index}
-							className="text-center p-8 rounded-2xl bg-gradient-to-br from-slate-900/30 to-slate-800/10 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-500 animate-scale-in"
+							className="text-center p-8 rounded-2xl bg-card/60 backdrop-blur-xl border border-primary/10 hover:border-primary/30 transition-all duration-500 animate-scale-in"
 							style={{ 
 								animationDelay: `${1200 + index * 100}ms`
 							}}
 						>
-							<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center border border-cyan-500/30">
-								<stat.icon className="w-8 h-8 text-cyan-400" />
+							<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-500/30">
+								<stat.icon className="w-8 h-8 text-primary" />
 							</div>
-							<div className="text-3xl md:text-4xl font-bold text-cyan-300 mb-2 font-heading">
+							<div className="text-3xl md:text-4xl font-bold text-primary mb-2 font-heading">
 								{stat.value}
 							</div>
-							<div className="text-cyan-200/60 text-sm uppercase tracking-wider">
+							<div className="text-muted-foreground text-sm uppercase tracking-wider">
 								{stat.label}
 							</div>
 						</div>

@@ -61,43 +61,6 @@ export default function AIFeatures({ input, setInput, onAISend, lastMessage }: A
 		})
 	}
 
-	const handleAskAI = () => {
-		if (!socket || !user) return
-		if (!input.trim()) {
-			toast({
-				title: "Empty message",
-				description: "Please type a message to send to AI",
-				variant: "destructive"
-			})
-			return
-		}
-
-		setIsAIThinking(true)
-		setSmartReplies([]) // Clear smart replies when asking AI
-
-		socket.emit('ai_chat_request', {
-			message: input,
-			roomId: activeChatRoomId
-		}, (response: TAIResponse) => {
-			setIsAIThinking(false)
-
-			if (response.success) {
-				setInput('') // Clear input on success
-				if (onAISend) onAISend()
-				toast({
-					title: "AI is responding",
-					description: "The AI assistant is typing a response...",
-				})
-			} else {
-				toast({
-					title: "AI Error",
-					description: response.error || "Failed to get AI response",
-					variant: "destructive"
-				})
-			}
-		})
-	}
-
 	const handleSmartReply = (reply: string) => {
 		setInput(reply)
 		setSmartReplies([])
@@ -131,7 +94,7 @@ export default function AIFeatures({ input, setInput, onAISend, lastMessage }: A
 			{smartReplies.length > 0 && !isAIRoom && (
 				<div className="smart-replies-container mb-2 px-4">
 					<div className="flex items-center gap-2 mb-1">
-						<Lightbulb size={14} className="text-purple-500" />
+						<Lightbulb size={14} className="text-blue-500" />
 						<span className="text-xs text-muted-foreground">Quick replies:</span>
 					</div>
 					<div className="flex flex-wrap gap-2">
@@ -139,7 +102,7 @@ export default function AIFeatures({ input, setInput, onAISend, lastMessage }: A
 							<Badge
 								key={index}
 								variant="outline"
-								className="cursor-pointer hover:bg-purple-500 hover:text-white transition-all duration-200 hover:scale-105 px-2 py-0.5 text-xs"
+								className="cursor-pointer hover:bg-blue-500 hover:text-white transition-all duration-200 hover:scale-105 px-2 py-0.5 text-xs"
 								onClick={() => handleSmartReply(reply)}
 							>
 								{reply}
@@ -150,20 +113,7 @@ export default function AIFeatures({ input, setInput, onAISend, lastMessage }: A
 			)}
 
 			{/* AI Action Buttons */}
-			<div className="ai-actions flex gap-2 px-4 pb-2">
-				{!isAIRoom && (
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleAskAI}
-						disabled={isAIThinking || !input.trim()}
-						className="hidden ask-ai-btn group border-purple-500/50 hover:bg-gradient-to-r hover:from-purple-500 hover:to-indigo-500 hover:text-white transition-all duration-300"
-					>
-						<Sparkles size={16} className="mr-1" />
-						{isAIThinking ? '🤔 AI Thinking...' : 'Ask AI'}
-					</Button>
-				)}
-				
+			<div className="ai-actions flex gap-2 px-4 pb-2">				
 				<Button
 					variant="outline"
 					size="sm"
@@ -180,9 +130,9 @@ export default function AIFeatures({ input, setInput, onAISend, lastMessage }: A
 			{isAIThinking && (
 				<div className="ai-thinking-indicator flex items-center gap-2 px-4 pb-2">
 					<div className="typing-dots flex gap-1">
-						<span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-						<span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-						<span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+						<span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+						<span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+						<span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
 					</div>
 					<span className="text-xs text-muted-foreground">AI is thinking...</span>
 				</div>
