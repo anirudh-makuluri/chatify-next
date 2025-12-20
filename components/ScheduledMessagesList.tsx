@@ -365,12 +365,61 @@ export default function ScheduledMessagesList({ roomId, userUid }: ScheduledMess
 
 							<div className="grid gap-2">
 								<Label htmlFor="edit-timezone">Timezone</Label>
-								<div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-									<Clock className="h-4 w-4 text-muted-foreground" />
-									<span className="text-sm text-muted-foreground">
-										{editForm.timezone} (Auto-detected)
-									</span>
-								</div>
+								<Select 
+									value={editForm.timezone} 
+									onValueChange={(value) => setEditForm({ ...editForm, timezone: value })}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select timezone" />
+									</SelectTrigger>
+									<SelectContent className="max-h-[300px]">
+										<SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+											{Intl.DateTimeFormat().resolvedOptions().timeZone} (Auto-detected)
+										</SelectItem>
+										<SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
+										<SelectItem value="America/New_York">America/New York (EST/EDT)</SelectItem>
+										<SelectItem value="America/Chicago">America/Chicago (CST/CDT)</SelectItem>
+										<SelectItem value="America/Denver">America/Denver (MST/MDT)</SelectItem>
+										<SelectItem value="America/Los_Angeles">America/Los Angeles (PST/PDT)</SelectItem>
+										<SelectItem value="America/Toronto">America/Toronto</SelectItem>
+										<SelectItem value="America/Vancouver">America/Vancouver</SelectItem>
+										<SelectItem value="America/Mexico_City">America/Mexico City</SelectItem>
+										<SelectItem value="America/Sao_Paulo">America/São Paulo</SelectItem>
+										<SelectItem value="Europe/London">Europe/London (GMT/BST)</SelectItem>
+										<SelectItem value="Europe/Paris">Europe/Paris (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Berlin">Europe/Berlin (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Madrid">Europe/Madrid (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Rome">Europe/Rome (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Amsterdam">Europe/Amsterdam (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Brussels">Europe/Brussels (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Vienna">Europe/Vienna (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Stockholm">Europe/Stockholm (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Copenhagen">Europe/Copenhagen (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Oslo">Europe/Oslo (CET/CEST)</SelectItem>
+										<SelectItem value="Europe/Helsinki">Europe/Helsinki (EET/EEST)</SelectItem>
+										<SelectItem value="Europe/Athens">Europe/Athens (EET/EEST)</SelectItem>
+										<SelectItem value="Europe/Moscow">Europe/Moscow (MSK)</SelectItem>
+										<SelectItem value="Europe/Istanbul">Europe/Istanbul (TRT)</SelectItem>
+										<SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+										<SelectItem value="Asia/Karachi">Asia/Karachi (PKT)</SelectItem>
+										<SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
+										<SelectItem value="Asia/Dhaka">Asia/Dhaka (BST)</SelectItem>
+										<SelectItem value="Asia/Bangkok">Asia/Bangkok (ICT)</SelectItem>
+										<SelectItem value="Asia/Singapore">Asia/Singapore (SGT)</SelectItem>
+										<SelectItem value="Asia/Hong_Kong">Asia/Hong Kong (HKT)</SelectItem>
+										<SelectItem value="Asia/Shanghai">Asia/Shanghai (CST)</SelectItem>
+										<SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+										<SelectItem value="Asia/Seoul">Asia/Seoul (KST)</SelectItem>
+										<SelectItem value="Australia/Perth">Australia/Perth (AWST)</SelectItem>
+										<SelectItem value="Australia/Adelaide">Australia/Adelaide (ACST/ACDT)</SelectItem>
+										<SelectItem value="Australia/Brisbane">Australia/Brisbane (AEST)</SelectItem>
+										<SelectItem value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</SelectItem>
+										<SelectItem value="Australia/Melbourne">Australia/Melbourne (AEST/AEDT)</SelectItem>
+										<SelectItem value="Pacific/Auckland">Pacific/Auckland (NZST/NZDT)</SelectItem>
+										<SelectItem value="Pacific/Fiji">Pacific/Fiji (FJT)</SelectItem>
+										<SelectItem value="Pacific/Honolulu">Pacific/Honolulu (HST)</SelectItem>
+									</SelectContent>
+								</Select>
 							</div>
 						</div>
 						<div className="flex justify-end gap-2">

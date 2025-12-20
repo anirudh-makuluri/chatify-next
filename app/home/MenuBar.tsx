@@ -4,7 +4,7 @@ import { useUser } from '@/app/providers'
 import {
 	UserRoundPlus,
 	PencilIcon,
-	Send
+	Save
 } from 'lucide-react'
 import { Button } from '../../components/ui/button';
 import {
@@ -203,7 +203,7 @@ export default function MenuBar() {
 							<Button className='ml-2' onClick={() => setUserNameEditable(prev => !prev)} variant={isUserNameEditable ? 'default' : 'ghost'}>
 								{
 									isUserNameEditable ?
-										<Send size={18} />
+										<Save size={18} />
 										:
 										<PencilIcon size={18} />
 								}
