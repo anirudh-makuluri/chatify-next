@@ -26,7 +26,8 @@ export const chatSlice = createSlice({
 				
 				state.rooms[roomData.roomId] = {
 				is_group: roomData.is_group,
-					messages: formatChatMessages(roomData.messages || []),
+				is_ai_room: roomData.roomId.startsWith('ai-assistant-'),
+				messages: formatChatMessages(roomData.messages || []),
 				name: roomData.name,
 				photo_url: roomData.photo_url,
 				roomId: roomData.roomId,

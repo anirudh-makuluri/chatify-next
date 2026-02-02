@@ -32,6 +32,7 @@ import AIFeatures from '@/components/AIFeatures';
 import ManageGroupDialog from '@/components/ManageGroupDialog';
 import ScheduleMessageDialog from '@/components/ScheduleMessageDialog';
 import ScheduledMessagesList from '@/components/ScheduledMessagesList';
+import SemanticSearchBar from '@/components/SemanticSearchBar';
 
 export default function Room() {
 	const { toast } = useToast();
@@ -281,6 +282,7 @@ export default function Room() {
 					<p>{activeRoom.name}</p>
 					{presenceText && <span className='text-xs opacity-60'>{presenceText}</span>}
 				</div>
+				{activeRoom.is_ai_room != true && <SemanticSearchBar roomId={activeChatRoomId} />}
 				{activeRoom.is_group && (
 					<div className='ml-auto'>
 						<ManageGroupDialog room={activeRoom} allFriends={user?.friend_list || []} />

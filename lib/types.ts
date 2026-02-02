@@ -187,3 +187,23 @@ export type TUpdateScheduledMessageRequest = {
     recurringPattern?: 'daily' | 'weekly' | 'monthly';
     timezone?: string;
 }
+
+// Semantic search (vector search in room messages)
+export type TSemanticSearchResult = {
+    message: ChatMessage & { chatDocId?: string };
+    score: number;
+};
+
+export type TSemanticSearchResponse = {
+    success: boolean;
+    results?: TSemanticSearchResult[];
+    message?: string;
+    error?: string;
+};
+
+export type TBackfillSearchResponse = {
+    success: boolean;
+    updatedCount?: number;
+    roomsProcessed?: number;
+    error?: string;
+}
