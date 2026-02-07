@@ -4,6 +4,7 @@ import { useDispatch, TypedUseSelectorHook, useSelector } from 'react-redux'
 import { chatReducer } from './chatSlice';
 import { socketReducer } from './socketSlice';
 import { scheduledMessagesReducer } from './scheduledMessagesSlice';
+import { e2eeReducer } from './e2eeSlice';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
 	ReturnType,
@@ -13,7 +14,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export const store = configureStore({
-	reducer: { chat: chatReducer, socket: socketReducer, scheduledMessages: scheduledMessagesReducer },
+	reducer: { chat: chatReducer, socket: socketReducer, scheduledMessages: scheduledMessagesReducer, e2ee: e2eeReducer },
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({ serializableCheck: false })
 })

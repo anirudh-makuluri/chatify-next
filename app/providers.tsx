@@ -6,6 +6,9 @@ import { TAuthUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import ReduxProvider from '@/redux/redux-provider';
 import { Tooltip, TooltipProvider } from '@radix-ui/react-tooltip';
+import { getIdentityKeyForDevice } from '@/lib/e2ee-api';
+import { E2EEService } from '@/lib/e2ee-service';
+import { getDeviceId } from '@/lib/device-manager';
 
 type TUserContext = {
 	user: TAuthUser | null,
@@ -39,7 +42,7 @@ export function Providers({ children }: { children: ReactNode }) {
 		customFetch({ pathName: 'session' })
 			.then((data) => {
 				if (data.success) {
-					// Ensure presence fields exist on user and members
+
 					const normalizedUser = {
 						...data.user,
 						friend_list: (data.user.friend_list || []).map((u: any) => ({
@@ -67,6 +70,7 @@ export function Providers({ children }: { children: ReactNode }) {
 						}))
 					}
 					setUser(normalizedUser)
+					void ensureE2EEKeys(normalizedUser);
 				}
 			})
 			.catch(error => {
@@ -74,6 +78,50 @@ export function Providers({ children }: { children: ReactNode }) {
 			}).finally(() => {
 				setLoading(false);
 			})
+	}
+
+	async function ensureE2EEKeys(normalizedUser: TAuthUser) {
+		try {
+
+			const e2eeService = E2EEService.getInstance();
+			await e2eeService.initialize();
+
+			const deviceId = getDeviceId();
+			const userId = normalizedUser.uid;
+			if (!deviceId) {
+				console.warn('E2EE device is not initialized yet.');
+				return;
+			}
+
+			let keyExists = false;
+			try {
+				const response = await getIdentityKeyForDevice(userId, deviceId);
+				keyExists = !!response?.success && !!response?.publicKey;
+			} catch (error) {
+				if (error instanceof Response && error.status === 404) {
+					keyExists = false;
+				} else {
+					console.error('Failed to check identity key status:', error);
+					return;
+				}
+			}
+
+			if (keyExists) {
+				return;
+			}
+
+			const groupIds = Array.from(
+				new Set(
+					(normalizedUser.rooms || [])
+						.filter((room) => !room.is_ai_room)
+						.map((room) => room.roomId)
+				)
+			);
+
+			await e2eeService.setupDeviceKeys(userId, groupIds);
+		} catch (error) {
+			console.error('E2EE key setup on login failed:', error);
+		}
 	}
 
 	function updateUser(newData: Partial<TAuthUser>) {

@@ -108,24 +108,6 @@ export default function SemanticSearchBar({
 							))}
 						</div>
 					)}
-					<div className="border-t pt-2">
-						<Button
-							variant="outline"
-							size="sm"
-							className="w-full"
-							onClick={handleBackfill}
-							disabled={backfilling}
-						>
-							{backfilling ? (
-								<>
-									<Loader2 className="h-4 w-4 animate-spin mr-2" />
-									Indexing…
-								</>
-							) : (
-								'Index past messages for search'
-							)}
-						</Button>
-					</div>
 				</div>
 			</PopoverContent>
 		</Popover>
