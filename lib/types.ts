@@ -1,3 +1,5 @@
+import { RecipientEncryptedMessages, EncryptedData } from './e2ee-types';
+
 export type ChatMessage = {
 	id: number;
 	roomId: string;
@@ -15,6 +17,8 @@ export type ChatMessage = {
 	isConsecutiveMessage?: boolean,
 	isDate?: boolean;
 	reactions?: {id: string, reactors: { uid: string, name: string }[]}[]
+	isEncrypted?: boolean;
+	encrypted?: EncryptedData | RecipientEncryptedMessages;
 };
 
 export type ChatDate = {
@@ -33,7 +37,9 @@ export type ChatDate = {
 	isUserInfoDisplayed?: undefined,
 	isConsecutiveMessage?: undefined,
 	isDate?: boolean
-	reactions?: undefined
+	reactions?: undefined,
+	isEncrypted?: boolean;
+	encrypted?: EncryptedData | RecipientEncryptedMessages;
 }
 
 export type TUser = {

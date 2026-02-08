@@ -134,7 +134,7 @@ export const encryptMessageForRecipient = (
 
 		return {
 			ciphertext: toBase64(ciphertext),
-			iv: '',
+			// No IV needed for sealed box encryption
 		};
 	} catch (error) {
 		console.error('Encryption failed:', error);
@@ -176,16 +176,14 @@ export const encryptMessageForMultipleRecipients = (
  * Decrypt a message using your private key
  *
  * @param ciphertext - The encrypted message (base64)
- * @param iv - The nonce used for encryption (base64)
- * @param senderPublicKeyBase64 - Sender's public key (base64)
- * @param yourPrivateKeyBase64 - Your private key (base64)
+ * @param iv - The nonce used for encryption (base64) - optional, only for authenticated encryption
+ * @param senderPublicKeyBase64 - Sender's public key (base64) - optional, only for authenticated encryption
+ * @param keyPair - Your key pair containing public and private keys (base64)
  * @returns The decrypted message
  */
 export const decryptMessage = (
 	ciphertext: string,
-	iv: string,
-	senderPublicKeyBase64: string,
-	yourPrivateKeyBase64: string
+	keyPair: { publicKey: string; privateKey: string }
 ): string => {
 	if (!sodiumReady) {
 		throw new Error('Sodium not initialized. Call initiateSodium() first.');
@@ -193,30 +191,15 @@ export const decryptMessage = (
 
 	try {
 		const ciphertextBytes = fromBase64(ciphertext);
-		const yourPrivateKey = fromBase64(yourPrivateKeyBase64);
-		let decrypted: Uint8Array;
+		const yourPrivateKey = fromBase64(keyPair.privateKey);
+		const yourPublicKey = fromBase64(keyPair.publicKey);
 
-		if (iv) {
-			const nonce = fromBase64(iv);
-			const senderPublicKey = fromBase64(senderPublicKeyBase64);
-
-			// Decrypt using sender's public key and your private key
-			decrypted = sodium.crypto_box_open_easy(
-				ciphertextBytes,
-				nonce,
-				senderPublicKey,
-				yourPrivateKey
-			);
-		} else {
-			const yourPublicKey = sodium.crypto_scalarmult_base(yourPrivateKey);
-
-			// Decrypt anonymous sealed box using recipient keypair
-			decrypted = sodium.crypto_box_seal_open(
-				ciphertextBytes,
-				yourPublicKey,
-				yourPrivateKey
-			);
-		}
+		// Decrypt anonymous sealed box using recipient keypair
+		const decrypted = sodium.crypto_box_seal_open(
+			ciphertextBytes,
+			yourPublicKey,
+			yourPrivateKey
+		);
 
 		return sodium.to_string(decrypted);
 	} catch (error) {

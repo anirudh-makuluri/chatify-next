@@ -14,6 +14,7 @@ import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSave
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
+import { useE2EEInitialization } from '@/lib/hooks/useE2EE';
 
 
 export default function Page() {
@@ -22,6 +23,7 @@ export default function Page() {
 	const activeChatRoomId = useAppSelector(state => state.chat.activeChatRoomId);
 	const socket = useAppSelector(state => state.socket.socket);
 	const dispatch = useAppDispatch();
+	const e2eeInitialized = useE2EEInitialization();
 	const isMobile = useClientMediaQuery('(max-width: 600px)');
 
 	const [isLoadingScreenVisible, setLoadingScreenVisibility] = useState(true);
@@ -33,7 +35,7 @@ export default function Page() {
 			router.replace("/auth")
 		}
 
-		if (!user || areRoomsInited) return;
+		if (!user || areRoomsInited || !e2eeInitialized) return;
 		setLoadingScreenVisibility(false);
 
 		const roomIds: string[] = user.rooms.map(u => u.roomId);
@@ -51,7 +53,7 @@ export default function Page() {
 
 		setRoomsInited(true);
 
-	}, [user, isLoading])
+	}, [user, isLoading, e2eeInitialized]);
 
 	useEffect(() => {
 		if (!socket) return;

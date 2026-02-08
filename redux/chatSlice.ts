@@ -40,7 +40,6 @@ export const chatSlice = createSlice({
 			//unreadmessages = 0
 		},
 		addMessage: (state, action: PayloadAction<ChatMessage>) => {
-			console.log(action.payload);
 			const chatMessages = state.rooms[action.payload.roomId].messages;
 			let lastMessage = chatMessages[chatMessages.length - 1];
 

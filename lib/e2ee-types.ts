@@ -105,7 +105,7 @@ export type RemoveRoomKeyResponse = {
 // Encryption/Decryption Types
 export type EncryptedData = {
 	ciphertext: string; // base64
-	iv: string; // base64
+	iv?: string; // base64 (only for authenticated encryption, not for sealed box)
 };
 
 export type DeviceEncryptedMessage = {

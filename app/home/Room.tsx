@@ -10,7 +10,8 @@ import {
 	ImageIcon,
 	FileCode,
 	Clock,
-	Lock
+	Lock,
+	ChevronUp
 } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useAppDispatch, useAppSelector } from '@/redux/store';
@@ -38,10 +39,11 @@ import ScheduledMessagesList from '@/components/ScheduledMessagesList';
 import SemanticSearchBar from '@/components/SemanticSearchBar';
 import {
 	useFetchRoomMemberPublicKeys,
-	useEncryptRoomMessage,
-	useSendEncryptedRoomMessage,
-	useE2EEError
+	useE2EEError,
+	useEncryptRoomMessage
 } from '@/lib/hooks/useE2EE';
+import * as crypto from '@/lib/crypto';
+import * as deviceManager from '@/lib/device-manager';
 
 export default function Room() {
 	const { toast } = useToast();
@@ -58,10 +60,7 @@ export default function Room() {
 	
 	// E2EE hooks for room encryption
 	const { memberPublicKeys, fetch: fetchKeys, loading: fetchingKeys } = useFetchRoomMemberPublicKeys(activeChatRoomId);
-	const { encrypt, loading: encryptLoading, error: encryptError } = useEncryptRoomMessage(activeChatRoomId);
-	const { send: sendEncryptedMessage, loading: sendingEncrypted, error: sendError } = useSendEncryptedRoomMessage(activeChatRoomId);
-
-	const [isEncryptionEnabled, setIsEncryptionEnabled] = useState(false);
+	const { encrypt: encryptForRoom, loading: encrypting } = useEncryptRoomMessage(activeChatRoomId);
 	const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'sending'>('idle');
 
     const presenceText = (() => {
@@ -83,26 +82,20 @@ export default function Room() {
 	const [prevMsgCnt, setPrevMsgCnt] = useState<number>(activeRoom?.messages?.length || 0);
 	const [isNewChatDocLoading, setIsNewChatDocLoading] = useState<Boolean>(false);
 	const [previewImages, setPreviewImages] = useState<TPreviewImage[]>([]);
+	const [encryptThisMessage, setEncryptThisMessage] = useState(false);
 
 	const [giphySearchText, setGiphySearchText] = useState('');
 	const [gifList, setGifList] = useState<TGiphy[]>([]);
 	const [lastMessageContent, setLastMessageContent] = useState<string>('');
 
-	// Fetch member public keys when room changes
+	// Fetch member public keys when room changes (for all room types)
 	useEffect(() => {
-		if (activeRoom.is_group && activeChatRoomId) {
-			setIsEncryptionEnabled(true);
+		if (activeChatRoomId) {
 			fetchKeys().catch((err) => {
 				console.error('Failed to fetch member keys:', err);
-				toast({
-					title: "Warning",
-					description: "Could not load encryption keys for this group"
-				});
 			});
-		} else {
-			setIsEncryptionEnabled(false);
 		}
-	}, [activeChatRoomId, activeRoom.is_group, fetchKeys]);
+	}, [activeChatRoomId]);
 
 	useEffect(() => {
 		searchGiphy();
@@ -168,31 +161,39 @@ export default function Room() {
 
 		if ((input.trim() == "" || input == null)) return;
 
-		// Try to send encrypted message if group and encryption is enabled
-		if (isEncryptionEnabled && activeRoom.is_group && memberPublicKeys && Object.keys(memberPublicKeys).length > 0) {
+		if (encryptThisMessage && memberPublicKeys && Object.keys(memberPublicKeys).length > 0) {
 			try {
 				setEncryptionStatus('encrypting');
 				
-				// Encrypt the message
-				const encrypted = encrypt(input);
-				if (!encrypted) {
+				// Encrypt message for all room members (each user's each device)
+				await crypto.initiateSodium();
+				const encryptedForRecipients = encryptForRoom(input);
+
+				if (!encryptedForRecipients) {
 					throw new Error('Encryption failed');
 				}
 
 				setEncryptionStatus('sending');
 				
-				// Send encrypted message through E2EE API
-				await sendEncryptedMessage(encrypted, user.uid);
+				const chatMessage: ChatMessage = {
+					id: (Date.now() * Math.floor(Math.random() * 1000)),
+					roomId: activeChatRoomId,
+					type: 'text',
+					chatInfo: "", // Don't send plaintext
+					userUid: user.uid,
+					userName: user.name,
+					userPhoto: user.photo_url,
+					time: new Date(),
+					isEncrypted: true,
+					encrypted: encryptedForRecipients // Contains encryption for every recipient device
+				}
+
+				dispatch(sendMessageToServer(chatMessage))
 				
 				setInput("");
 				setPreviewImages([]);
 				setEncryptionStatus('idle');
 				
-				// Show feedback
-				toast({
-					title: "Sent",
-					description: "Message encrypted and sent 🔐"
-				});
 			} catch (err) {
 				console.error('Encryption/send failed:', err);
 				setEncryptionStatus('idle');
@@ -200,26 +201,13 @@ export default function Room() {
 				// Fallback to unencrypted message
 				toast({
 					title: "Warning",
-					description: "Sending without encryption due to: " + (err instanceof Error ? err.message : 'Unknown error')
+					description: "Encryption failed. Try again or send unencrypted.",
+					variant: 'destructive'
 				});
 				
-				const chatMessage: ChatMessage = {
-					id: (Date.now() * Math.floor(Math.random() * 1000)),
-					roomId: activeChatRoomId,
-					type: 'text',
-					chatInfo: input,
-					userUid: user.uid,
-					userName: user.name,
-					userPhoto: user.photo_url,
-					time: new Date()
-				}
-
-				dispatch(sendMessageToServer(chatMessage))
-				setInput("");
-				setPreviewImages([])
 			}
 		} else {
-			// Send unencrypted message (1-on-1 or encryption not available)
+			// Send unencrypted message
 			const chatMessage: ChatMessage = {
 				id: (Date.now() * Math.floor(Math.random() * 1000)),
 				roomId: activeChatRoomId,
@@ -389,6 +377,7 @@ export default function Room() {
 						<ChatBubble
 							key={index}
 							message={message}
+							roomId={activeChatRoomId}
 							isGroup={activeRoom.is_group}
 						/>
 					))
@@ -423,38 +412,35 @@ export default function Room() {
 				{/* Input Area */}
 				<div className='px-4 pb-3'>
 					{/* Encryption Status Indicator */}
-					{isEncryptionEnabled && (
-						<div className='flex items-center gap-2 mb-2 text-xs text-green-600 dark:text-green-400'>
+					{memberPublicKeys && Object.keys(memberPublicKeys).length > 0 && encryptThisMessage && (
+						<div className={`flex items-center gap-2 mb-2 text-xs text-green-600 dark:text-green-400`}>
 							<Lock size={14} />
 							<span>
-								{encryptionStatus === 'idle' && 'Messages will be encrypted 🔐'}
-								{encryptionStatus === 'encrypting' && 'Encrypting message...'}
-								{encryptionStatus === 'sending' && 'Sending encrypted message...'}
+								This message will be encrypted 🔐
 							</span>
 						</div>
 					)}
 					
 					{/* Error Display */}
-					{(e2eeError || encryptError || sendError) && (
-						<div className='flex items-center gap-2 mb-2 text-xs text-red-600 dark:text-red-400'>
-							<span>⚠️ {e2eeError || encryptError || sendError}</span>
+					{e2eeError && (
+							<div className='flex items-center gap-2 mb-2 text-xs text-red-600 dark:text-red-400'>
+								<span>⚠️ {e2eeError}</span>
 						</div>
 					)}
 
 					<Textarea
 						ref={textAreaRef}
-						onKeyDown={e => { if (e.key == "Enter" && !encryptLoading && !sendingEncrypted) sendMessage() }}
+						onKeyDown={e => { if (e.key == "Enter") sendMessage() }}
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						placeholder='Type your message here'
 						className='min-h-[60px] max-h-[120px]'
-						disabled={encryptLoading || sendingEncrypted}
 					/>
 					<div className='flex justify-between mt-2'>
 						<div className='gap-2 flex flex-row'>
 							<Popover>
 								<PopoverTrigger asChild>
-									<Button variant={'outline'} size='sm' disabled={encryptLoading || sendingEncrypted}>
+									<Button variant={'outline'} size='sm'>
 										<SmileIcon />
 									</Button>
 								</PopoverTrigger>
@@ -465,13 +451,13 @@ export default function Room() {
 									/>
 								</PopoverContent>
 							</Popover>
-							<Button onClick={openImageChoose} variant={'outline'} size='sm' disabled={encryptLoading || sendingEncrypted}>
+							<Button onClick={openImageChoose} variant={'outline'} size='sm'>
 								<ImageIcon />
 								<Input className='hidden' ref={imageRef} type='file' accept='image/*' multiple />
 							</Button>
 							<Popover>
 								<PopoverTrigger asChild>
-									<Button variant={'outline'} size='sm' disabled={encryptLoading || sendingEncrypted}>
+									<Button variant={'outline'} size='sm'>
 										<FileCode />
 									</Button>
 								</PopoverTrigger>
@@ -493,31 +479,53 @@ export default function Room() {
 								</PopoverContent>
 							</Popover>
 							<ScheduleMessageDialog roomId={activeChatRoomId}>
-								<Button variant={'outline'} size='sm' disabled={encryptLoading || sendingEncrypted}>
+								<Button variant={'outline'} size='sm'>
 									<Clock />
 								</Button>
 							</ScheduleMessageDialog>
 							<ScheduledMessagesList roomId={activeChatRoomId} userUid={user?.uid || ''} />
 						</div>
-						<Button 
-							disabled={(input.trim() == "" || input == null) && previewImages.length == 0 || encryptLoading || sendingEncrypted || fetchingKeys}
-							onClick={sendMessage}
-							size='sm'
-						>
-							{encryptLoading || sendingEncrypted ? (
-								<>
-									
-									Sending...
-								</>
-							) : isEncryptionEnabled ? (
-								<>
-									<Lock size={16} className='mr-1' />
-									<Send size={16} />
-								</>
-							) : (
-								<Send />
+						<div className='flex'>
+							{memberPublicKeys && Object.keys(memberPublicKeys).length > 0 && (
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button 
+											className='rounded-r-none'
+											size='xs'
+										>
+											<ChevronUp size={16} />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent className='' align='end'>
+										<div className='flex flex-col gap-2'>
+											<div className='flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer' onClick={() => setEncryptThisMessage(!encryptThisMessage)}>
+												<div className={`w-4 h-4 rounded ${encryptThisMessage ? 'bg-green-600 dark:bg-green-400' : 'border border-gray-300'}`} />
+												<span className='text-sm whitespace-nowrap'>
+													{encryptThisMessage ? 'Do not encrypt this message 🔐' : 'Encrypt this message 🔐'}
+												</span>
+											</div>
+										</div>
+									</PopoverContent>
+								</Popover>
 							)}
-						</Button>
+							<Button 
+								disabled={(input.trim() == "" || input == null) && previewImages.length == 0 || encryptionStatus !== 'idle' || fetchingKeys}
+								onClick={sendMessage}
+								size='sm'
+								className='rounded-l-none'
+							>
+								{encryptionStatus !== 'idle' ? (
+									<>Encrypting & Sending...</>
+								) : encryptThisMessage ? (
+									<>
+										<Lock size={16} className='mr-1' />
+										<Send size={16} />
+									</>
+								) : (
+									<Send />
+								)}
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

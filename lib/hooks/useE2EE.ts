@@ -48,7 +48,7 @@ export const useE2EEInitialization = () => {
 				const deviceState = deviceManager.isDeviceInitialized()
 					? getDeviceState()
 					: initializeDevice();
-
+				
 				if (deviceState) {
 					dispatch(setDeviceState(deviceState));
 					setInitialized(true);
@@ -64,8 +64,9 @@ export const useE2EEInitialization = () => {
 			}
 		};
 
+		console.log('Starting E2EE initialization...');
 		initE2EE();
-	}, [dispatch]);
+	}, []);
 
 	return initialized;
 };
@@ -304,27 +305,24 @@ export const useDecryptMessage = () => {
 	const decrypt = useCallback(
 		(
 			ciphertext: string,
-			iv: string,
-			senderPublicKey: string,
-			roomId?: string
+			roomId: string
 		): string | null => {
 			try {
 				setLoading(true);
 				setErrorMsg(null);
 
-				const yourPrivateKey = roomId
-					? deviceManager.getRoomPrivateKey(roomId)
-					: deviceManager.getIdentityPrivateKey();
+				console.log('Attempting to decrypt message for room:', roomId);
+				const keyPair = deviceManager.getRoomKeyPair(roomId);
 
-				if (!yourPrivateKey) {
-					throw new Error('Private key not found');
+				console.log(keyPair)
+
+				if (!keyPair) {
+					throw new Error('KeyPair not found');
 				}
 
 				const decrypted = crypto.decryptMessage(
 					ciphertext,
-					iv,
-					senderPublicKey,
-					yourPrivateKey
+					keyPair
 				);
 
 				setErrorMsg(null);
