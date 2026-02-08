@@ -37,9 +37,9 @@ import ScheduleMessageDialog from '@/components/ScheduleMessageDialog';
 import ScheduledMessagesList from '@/components/ScheduledMessagesList';
 import SemanticSearchBar from '@/components/SemanticSearchBar';
 import {
-	useFetchGroupMemberPublicKeys,
-	useEncryptGroupMessage,
-	useSendEncryptedGroupMessage,
+	useFetchRoomMemberPublicKeys,
+	useEncryptRoomMessage,
+	useSendEncryptedRoomMessage,
 	useE2EEError
 } from '@/lib/hooks/useE2EE';
 
@@ -56,10 +56,10 @@ export default function Room() {
 	const user = useUser()?.user;
 	const e2eeError = useE2EEError();
 	
-	// E2EE hooks for group encryption
-	const { memberPublicKeys, fetch: fetchKeys, loading: fetchingKeys } = useFetchGroupMemberPublicKeys(activeChatRoomId);
-	const { encrypt, loading: encryptLoading, error: encryptError } = useEncryptGroupMessage(activeChatRoomId);
-	const { send: sendEncryptedMessage, loading: sendingEncrypted, error: sendError } = useSendEncryptedGroupMessage(activeChatRoomId);
+	// E2EE hooks for room encryption
+	const { memberPublicKeys, fetch: fetchKeys, loading: fetchingKeys } = useFetchRoomMemberPublicKeys(activeChatRoomId);
+	const { encrypt, loading: encryptLoading, error: encryptError } = useEncryptRoomMessage(activeChatRoomId);
+	const { send: sendEncryptedMessage, loading: sendingEncrypted, error: sendError } = useSendEncryptedRoomMessage(activeChatRoomId);
 
 	const [isEncryptionEnabled, setIsEncryptionEnabled] = useState(false);
 	const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'sending'>('idle');
@@ -88,7 +88,7 @@ export default function Room() {
 	const [gifList, setGifList] = useState<TGiphy[]>([]);
 	const [lastMessageContent, setLastMessageContent] = useState<string>('');
 
-	// Fetch member public keys when room changes (for E2EE)
+	// Fetch member public keys when room changes
 	useEffect(() => {
 		if (activeRoom.is_group && activeChatRoomId) {
 			setIsEncryptionEnabled(true);
@@ -182,7 +182,7 @@ export default function Room() {
 				setEncryptionStatus('sending');
 				
 				// Send encrypted message through E2EE API
-				await sendEncryptedMessage(input, encrypted, user.uid);
+				await sendEncryptedMessage(encrypted, user.uid);
 				
 				setInput("");
 				setPreviewImages([]);

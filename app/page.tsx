@@ -107,7 +107,7 @@ export default function Home() {
 						className={`inline-flex items-center gap-2 px-5 py-2.5 mb-8 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 animate-scale-in ${isVisible ? 'animate-scale-in' : ''}`}
 						style={{ animationDelay: '0ms' }}
 					>
-						<Sparkles className="w-4 h-4 text-cyan-400 dark:text-cyan-300 text-cyan-600 animate-pulse-glow" />
+						<Sparkles className="w-4 h-4 dark:text-cyan-300 text-cyan-600 animate-pulse-glow" />
 						<span className="text-sm font-medium text-cyan-600 dark:text-cyan-300 font-heading">
 							Powered by Advanced AI
 						</span>

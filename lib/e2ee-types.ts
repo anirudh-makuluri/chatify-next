@@ -18,8 +18,8 @@ export type DeviceKeyPair = {
 	deviceName: string;
 };
 
-export type GroupKeyPair = {
-	groupId: string;
+export type RoomKeyPair = {
+	roomId: string;
 	publicKey: string; // base64
 	privateKey: string; // base64 (stored locally only)
 };
@@ -38,22 +38,22 @@ export type RegisterDeviceIdentityKeyResponse = {
 	deviceId: string;
 };
 
-export type RegisterDeviceGroupKeyRequest = {
+export type RegisterDeviceRoomKeyRequest = {
 	userId: string;
 	deviceId: string;
 	deviceName: string;
-	groupPublicKey: string; // base64
+	roomPublicKey: string; // base64
 };
 
-export type RegisterDeviceGroupKeyResponse = {
+export type RegisterDeviceRoomKeyResponse = {
 	success: boolean;
 	message: string;
 	deviceId: string;
 };
 
-export type GetGroupPublicKeysResponse = {
+export type GetRoomPublicKeysResponse = {
 	success: boolean;
-	groupId: string;
+	roomId: string;
 	members: {
 		[userId: string]: {
 			[deviceId: string]: string; // base64 public key
@@ -84,8 +84,8 @@ export type RotateKeysRequest = {
 	deviceId: string;
 	deviceName: string;
 	newIdentityPublicKey: string; // base64
-	groupKeys: {
-		[groupId: string]: string; // base64 group public key
+	roomKeys: {
+		[roomId: string]: string; // base64 room public key
 	};
 };
 
@@ -96,7 +96,7 @@ export type RotateKeysResponse = {
 	deviceId: string;
 };
 
-export type RemoveGroupKeyResponse = {
+export type RemoveRoomKeyResponse = {
 	success: boolean;
 	message: string;
 	deviceId?: string;
@@ -116,7 +116,7 @@ export type RecipientEncryptedMessages = {
 	[userId: string]: DeviceEncryptedMessage;
 };
 
-export type EncryptedGroupMessage = {
+export type EncryptedRoomMessage = {
 	senderId: string;
 	recipients: RecipientEncryptedMessages;
 	senderKeys?: {
@@ -125,9 +125,9 @@ export type EncryptedGroupMessage = {
 	};
 };
 
-export type StoreEncryptedGroupMessageRequest = EncryptedGroupMessage;
+export type StoreEncryptedRoomMessageRequest = EncryptedRoomMessage;
 
-export type StoreEncryptedGroupMessageResponse = {
+export type StoreEncryptedRoomMessageResponse = {
 	success: boolean;
 	messageId: string;
 };
@@ -138,8 +138,8 @@ export type E2EEDeviceState = {
 	deviceId: string | null;
 	deviceName: string | null;
 	identityKeyPair: DeviceKeyPair | null; // private key stored locally
-	groupKeyPairs: {
-		[groupId: string]: GroupKeyPair;
+	roomKeyPairs: {
+		[roomId: string]: RoomKeyPair;
 	};
 };
 

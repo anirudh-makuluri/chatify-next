@@ -5,12 +5,12 @@
  * Stores device data locally in localStorage
  */
 
-import { DeviceKeyPair, GroupKeyPair, E2EEDeviceState } from './e2ee-types';
+import { DeviceKeyPair, RoomKeyPair, E2EEDeviceState } from './e2ee-types';
 import { generateBoxKeypair, generateDeviceId } from './crypto';
 
 const DEVICE_STORAGE_KEY = 'e2ee_device_state';
 const DEVICE_IDENTITY_KEY = 'e2ee_identity_keypair';
-const DEVICE_GROUP_KEYS_KEY = 'e2ee_group_keypairs';
+const DEVICE_ROOM_KEYS_KEY = 'e2ee_room_keypairs';
 
 /**
  * Initialize device state
@@ -38,7 +38,7 @@ export const initializeDevice = (deviceName?: string): E2EEDeviceState => {
 				privateKey: identityKeypair.privateKey,
 				deviceName: deviceName || `Web Device`,
 			},
-			groupKeyPairs: {},
+			roomKeyPairs: {},
 		};
 
 		saveDeviceState(deviceState);
@@ -107,70 +107,70 @@ export const getIdentityPrivateKey = (): string | null => {
 };
 
 /**
- * Get group key pair for a specific group
+ * Get room key pair for a specific room
  */
-export const getGroupKeyPair = (groupId: string): GroupKeyPair | null => {
+export const getRoomKeyPair = (roomId: string): RoomKeyPair | null => {
 	const state = getDeviceState();
-	return state?.groupKeyPairs[groupId] || null;
+	return state?.roomKeyPairs[roomId] || null;
 };
 
 /**
- * Get all group key pairs
+ * Get all room key pairs
  */
-export const getAllGroupKeyPairs = (): { [groupId: string]: GroupKeyPair } => {
+export const getAllRoomKeyPairs = (): { [roomId: string]: RoomKeyPair } => {
 	const state = getDeviceState();
-	return state?.groupKeyPairs || {};
+	return state?.roomKeyPairs || {};
 };
 
 /**
- * Get group public key
+ * Get room public key
  */
-export const getGroupPublicKey = (groupId: string): string | null => {
-	const keypair = getGroupKeyPair(groupId);
+export const getRoomPublicKey = (roomId: string): string | null => {
+	const keypair = getRoomKeyPair(roomId);
 	return keypair?.publicKey || null;
 };
 
 /**
- * Get group private key
+ * Get room private key
  */
-export const getGroupPrivateKey = (groupId: string): string | null => {
-	const keypair = getGroupKeyPair(groupId);
+export const getRoomPrivateKey = (roomId: string): string | null => {
+	const keypair = getRoomKeyPair(roomId);
 	return keypair?.privateKey || null;
 };
 
 /**
- * Add or update group key pair
+ * Add or update room key pair
  */
-export const setGroupKeyPair = (groupKeyPair: GroupKeyPair): void => {
+export const setRoomKeyPair = (roomKeyPair: RoomKeyPair): void => {
 	try {
 		const state = getDeviceState();
 		if (!state) {
 			throw new Error('Device not initialized');
 		}
 
-		state.groupKeyPairs[groupKeyPair.groupId] = groupKeyPair;
+		state.roomKeyPairs[roomKeyPair.roomId] = roomKeyPair;
 		saveDeviceState(state);
 	} catch (error) {
-		console.error('Failed to set group key pair:', error);
-		throw new Error(`Failed to save group key pair: ${error}`);
+		console.error('Failed to set room key pair:', error);
+		throw new Error(`Failed to save room key pair: ${error}`);
 	}
 };
 
 /**
- * Remove group key pair
+ * Remove room key pair
  */
-export const removeGroupKeyPair = (groupId: string): void => {
+export const removeRoomKeyPair = (roomId: string): void => {
 	try {
 		const state = getDeviceState();
 		if (!state) {
 			throw new Error('Device not initialized');
 		}
 
-		delete state.groupKeyPairs[groupId];
+		delete state.roomKeyPairs[roomId];
 		saveDeviceState(state);
 	} catch (error) {
-		console.error('Failed to remove group key pair:', error);
-		throw new Error(`Failed to remove group key pair: ${error}`);
+		console.error('Failed to remove room key pair:', error);
+		throw new Error(`Failed to remove room key pair: ${error}`);
 	}
 };
 
@@ -205,9 +205,9 @@ export const rotateIdentityKeyPair = (deviceName?: string): DeviceKeyPair => {
 };
 
 /**
- * Rotate group key pair for a specific group
+ * Rotate room key pair for a specific room
  */
-export const rotateGroupKeyPair = (groupId: string): GroupKeyPair => {
+export const rotateRoomKeyPair = (roomId: string): RoomKeyPair => {
 	try {
 		const state = getDeviceState();
 		if (!state || !state.deviceId) {
@@ -215,19 +215,19 @@ export const rotateGroupKeyPair = (groupId: string): GroupKeyPair => {
 		}
 
 		const newKeypair = generateBoxKeypair();
-		const newGroupKeyPair: GroupKeyPair = {
-			groupId,
+		const newRoomKeyPair: RoomKeyPair = {
+			roomId,
 			publicKey: newKeypair.publicKey,
 			privateKey: newKeypair.privateKey,
 		};
 
-		state.groupKeyPairs[groupId] = newGroupKeyPair;
+		state.roomKeyPairs[roomId] = newRoomKeyPair;
 		saveDeviceState(state);
 
-		return newGroupKeyPair;
+		return newRoomKeyPair;
 	} catch (error) {
-		console.error('Failed to rotate group key pair:', error);
-		throw new Error(`Failed to rotate group key pair: ${error}`);
+		console.error('Failed to rotate room key pair:', error);
+		throw new Error(`Failed to rotate room key pair: ${error}`);
 	}
 };
 
@@ -261,7 +261,7 @@ export const clearDeviceData = (): void => {
 		if (typeof window !== 'undefined') {
 			localStorage.removeItem(DEVICE_STORAGE_KEY);
 			localStorage.removeItem(DEVICE_IDENTITY_KEY);
-			localStorage.removeItem(DEVICE_GROUP_KEYS_KEY);
+			localStorage.removeItem(DEVICE_ROOM_KEYS_KEY);
 		}
 	} catch (error) {
 		console.error('Failed to clear device data:', error);
@@ -274,21 +274,21 @@ export const clearDeviceData = (): void => {
  */
 export const exportPublicKeys = (): {
 	identityPublicKey: string;
-	groupPublicKeys: { [groupId: string]: string };
+	roomPublicKeys: { [roomId: string]: string };
 } => {
 	const state = getDeviceState();
 	if (!state || !state.identityKeyPair) {
 		throw new Error('Device not initialized');
 	}
 
-	const groupPublicKeys: { [groupId: string]: string } = {};
-	for (const [groupId, keypair] of Object.entries(state.groupKeyPairs)) {
-		groupPublicKeys[groupId] = keypair.publicKey;
+	const roomPublicKeys: { [roomId: string]: string } = {};
+	for (const [roomId, keypair] of Object.entries(state.roomKeyPairs)) {
+		roomPublicKeys[roomId] = keypair.publicKey;
 	}
 
 	return {
 		identityPublicKey: state.identityKeyPair.publicKey,
-		groupPublicKeys,
+		roomPublicKeys,
 	};
 };
 
@@ -326,7 +326,7 @@ export const getDeviceInfo = () => {
 		deviceName: state.deviceName,
 		initialized: state.initialized,
 		identityKeyRegistered: !!state.identityKeyPair?.publicKey,
-		groupsWithKeys: Object.keys(state.groupKeyPairs).length,
+		roomsWithKeys: Object.keys(state.roomKeyPairs).length,
 	};
 };
 

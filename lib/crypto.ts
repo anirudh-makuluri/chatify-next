@@ -1,14 +1,29 @@
 'use client'
 
-// @ts-ignore - libsodium.js doesn't have official type declarations
-import sodium from 'libsodium-wrappers-sumo';
 import { EncryptedData, SodiumBoxKeypair } from './e2ee-types';
 
 // Initialize sodium (call once at app startup)
 let sodiumReady = false;
+let sodium: any = null;
+
+/**
+ * Dynamically import libsodium only when needed (client-side only)
+ * This prevents webpack from trying to bundle WASM during server-side build
+ */
+const loadSodium = async () => {
+	if (!sodium) {
+		// @ts-ignore - libsodium.js doesn't have official type declarations
+		const sodiumModule = await import('libsodium-wrappers-sumo');
+		sodium = sodiumModule.default;
+	}
+	return sodium;
+};
 
 // Defer variant initialization until runtime to avoid server-side import issues
 const getBase64Variants = () => {
+	if (!sodium) {
+		return { ORIGINAL: null, URLSAFE: null };
+	}
 	try {
 		return {
 			ORIGINAL: sodium.base64_variants.ORIGINAL,
@@ -21,11 +36,17 @@ const getBase64Variants = () => {
 };
 
 const toBase64 = (data: Uint8Array): string => {
+	if (!sodium) {
+		throw new Error('Sodium not loaded. Call initiateSodium() first.');
+	}
 	const variants = getBase64Variants();
 	return variants.ORIGINAL ? sodium.to_base64(data, variants.ORIGINAL) : sodium.to_base64(data);
 };
 
 const fromBase64 = (value: string): Uint8Array => {
+	if (!sodium) {
+		throw new Error('Sodium not loaded. Call initiateSodium() first.');
+	}
 	const variants = getBase64Variants();
 	try {
 		return variants.ORIGINAL ? sodium.from_base64(value, variants.ORIGINAL) : sodium.from_base64(value);
@@ -40,13 +61,14 @@ export const normalizeBase64Key = (value: string): string => {
 
 export const initiateSodium = async (): Promise<void> => {
 	if (!sodiumReady) {
+		await loadSodium();
 		await sodium.ready;
 		sodiumReady = true;
 	}
 };
 
 /**
- * Generate a box keypair (public + private key) for identity or group keys
+ * Generate a box keypair (public + private key) for identity or room keys
  * Returns { publicKey, privateKey } in base64 format
  */
 export const generateBoxKeypair = (): {
@@ -265,7 +287,7 @@ export const hashString = (input: string): string => {
 
 /**
  * Derive a key from a password using Argon2
- * Useful for deriving group keys from a group secret
+ * Useful for deriving room keys from a room secret
  */
 export const deriveKeyFromPassword = (
 	password: string,

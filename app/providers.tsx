@@ -120,6 +120,8 @@ export function Providers({ children }: { children: ReactNode }) {
 				)
 			);
 
+			console.log(groupIds)
+
 			await e2eeService.setupDeviceKeys(userId, groupIds);
 		} catch (error) {
 			console.error('E2EE key setup on login failed:', error);

@@ -9,15 +9,15 @@ import { customFetch } from './utils';
 import {
 	RegisterDeviceIdentityKeyRequest,
 	RegisterDeviceIdentityKeyResponse,
-	RegisterDeviceGroupKeyRequest,
-	RegisterDeviceGroupKeyResponse,
-	GetGroupPublicKeysResponse,
+	RegisterDeviceRoomKeyRequest,
+	RegisterDeviceRoomKeyResponse,
+	GetRoomPublicKeysResponse,
 	GetIdentityKeyResponse,
 	RotateKeysRequest,
 	RotateKeysResponse,
-	RemoveGroupKeyResponse,
-	StoreEncryptedGroupMessageRequest,
-	StoreEncryptedGroupMessageResponse,
+	RemoveRoomKeyResponse,
+	StoreEncryptedRoomMessageRequest,
+	StoreEncryptedRoomMessageResponse,
 } from './e2ee-types';
 
 /**
@@ -34,27 +34,27 @@ export const registerDeviceIdentityKey = async (
 };
 
 /**
- * Register device group key with the server
+ * Register device room key with the server
  */
-export const registerDeviceGroupKey = async (
-	groupId: string,
-	request: RegisterDeviceGroupKeyRequest
-): Promise<RegisterDeviceGroupKeyResponse> => {
+export const registerDeviceRoomKey = async (
+	roomId: string,
+	request: RegisterDeviceRoomKeyRequest
+): Promise<RegisterDeviceRoomKeyResponse> => {
 	return customFetch({
-		pathName: `groups/${groupId}/members/add-key`,
+		pathName: `rooms/${roomId}/members/add-key`,
 		method: 'POST',
 		body: request,
 	});
 };
 
 /**
- * Get all group public keys (all members + devices)
+ * Get all room public keys (all members + devices)
  */
-export const getGroupPublicKeys = async (
-	groupId: string
-): Promise<GetGroupPublicKeysResponse> => {
+export const getRoomPublicKeys = async (
+	roomId: string
+): Promise<GetRoomPublicKeysResponse> => {
 	return customFetch({
-		pathName: `groups/${groupId}/members/public-keys`,
+		pathName: `rooms/${roomId}/members/public-keys`,
 		method: 'GET',
 	});
 };
@@ -99,41 +99,41 @@ export const rotateDeviceKeys = async (
 };
 
 /**
- * Remove group key for a specific device
+ * Remove room key for a specific device
  */
-export const removeDeviceGroupKey = async (
-	groupId: string,
+export const removeDeviceRoomKey = async (
+	roomId: string,
 	userId: string,
 	deviceId: string
-): Promise<RemoveGroupKeyResponse> => {
+): Promise<RemoveRoomKeyResponse> => {
 	return customFetch({
-		pathName: `groups/${groupId}/members/${userId}/key?deviceId=${encodeURIComponent(deviceId)}`,
+		pathName: `rooms/${roomId}/members/${userId}/key?deviceId=${encodeURIComponent(deviceId)}`,
 		method: 'DELETE',
 	});
 };
 
 /**
- * Remove user group key (full member removal)
+ * Remove user room key (full member removal)
  */
-export const removeUserGroupKey = async (
-	groupId: string,
+export const removeUserRoomKey = async (
+	roomId: string,
 	userId: string
-): Promise<RemoveGroupKeyResponse> => {
+): Promise<RemoveRoomKeyResponse> => {
 	return customFetch({
-		pathName: `groups/${groupId}/members/${userId}/key`,
+		pathName: `rooms/${roomId}/members/${userId}/key`,
 		method: 'DELETE',
 	});
 };
 
 /**
- * Store encrypted group message
+ * Store encrypted room message
  */
-export const storeEncryptedGroupMessage = async (
-	groupId: string,
-	request: StoreEncryptedGroupMessageRequest
-): Promise<StoreEncryptedGroupMessageResponse> => {
+export const storeEncryptedRoomMessage = async (
+	roomId: string,
+	request: StoreEncryptedRoomMessageRequest
+): Promise<StoreEncryptedRoomMessageResponse> => {
 	return customFetch({
-		pathName: `groups/${groupId}/messages`,
+		pathName: `rooms/${roomId}/messages`,
 		method: 'POST',
 		body: request,
 	});

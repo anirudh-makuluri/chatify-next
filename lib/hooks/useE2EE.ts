@@ -10,17 +10,17 @@ import {
 	setDeviceState,
 	setError,
 	setInitializing,
-	setGroupMemberPublicKeys,
-	setGroupKeyPair,
+	setRoomMemberPublicKeys,
+	setRoomKeyPair,
 	clearE2EEData,
 	rotateIdentityKey,
 	selectDeviceState,
 	selectDeviceId,
-	selectGroupMemberPublicKeys,
+	selectRoomMemberPublicKeys,
 	selectE2EEError,
 	selectIsInitializing,
 	selectIdentityPublicKey,
-	selectGroupPrivateKey,
+	selectRoomPrivateKey,
 } from '@/redux/e2eeSlice';
 import { getDeviceState, initializeDevice } from '@/lib/device-manager';
 import * as deviceManager from '@/lib/device-manager';
@@ -150,22 +150,22 @@ export const useRegisterDeviceGroupKey = () => {
 	const [error, setErrorMsg] = useState<string | null>(null);
 
 	const register = useCallback(
-		async (groupId: string, userId: string) => {
+		async (roomId: string, userId: string) => {
 			try {
 				setLoading(true);
 				setErrorMsg(null);
 
-				// Derive or generate group keypair if not exists
-				let groupKeyPair = deviceManager.getGroupKeyPair(groupId);
-				if (!groupKeyPair) {
+				// Derive or generate room keypair if not exists
+				let roomKeyPair = deviceManager.getRoomKeyPair(roomId);
+				if (!roomKeyPair) {
 					const keypair = crypto.generateBoxKeypair();
-					groupKeyPair = {
-						groupId,
+					roomKeyPair = {
+						roomId,
 						publicKey: keypair.publicKey,
 						privateKey: keypair.privateKey,
 					};
-					deviceManager.setGroupKeyPair(groupKeyPair);
-					dispatch(setGroupKeyPair(groupKeyPair));
+					deviceManager.setRoomKeyPair(roomKeyPair);
+					dispatch(setRoomKeyPair(roomKeyPair));
 				}
 
 				const deviceId = deviceManager.getDeviceId();
@@ -175,15 +175,15 @@ export const useRegisterDeviceGroupKey = () => {
 					throw new Error('Device not initialized');
 				}
 
-				const response = await e2eeApi.registerDeviceGroupKey(groupId, {
+				const response = await e2eeApi.registerDeviceRoomKey(roomId, {
 					userId,
 					deviceId,
 					deviceName: deviceName || 'Web Device',
-					groupPublicKey: groupKeyPair.publicKey,
+					roomPublicKey: roomKeyPair.publicKey,
 				});
 
 				if (!response.success) {
-					throw new Error(response.message || 'Failed to register group key');
+					throw new Error(response.message || 'Failed to register room key');
 				}
 
 				dispatch(setError(null));
@@ -204,30 +204,30 @@ export const useRegisterDeviceGroupKey = () => {
 };
 
 /**
- * Fetch and cache group member public keys
+ * Fetch and cache room member public keys
  */
-export const useFetchGroupMemberPublicKeys = (groupId: string) => {
+export const useFetchRoomMemberPublicKeys = (roomId: string) => {
 	const dispatch = useAppDispatch();
 	const [loading, setLoading] = useState(false);
 	const [error, setErrorMsg] = useState<string | null>(null);
 
-	const memberPublicKeys = useAppSelector(selectGroupMemberPublicKeys(groupId));
+	const memberPublicKeys = useAppSelector(selectRoomMemberPublicKeys(roomId));
 
 	const fetch = useCallback(async () => {
 		try {
 			setLoading(true);
 			setErrorMsg(null);
 
-			const response = await e2eeApi.getGroupPublicKeys(groupId);
+			const response = await e2eeApi.getRoomPublicKeys(roomId);
 
 
 			if (!response.success) {
-				throw new Error('Failed to fetch group keys');
+				throw new Error('Failed to fetch room keys');
 			}
 
 			dispatch(
-				setGroupMemberPublicKeys({
-					groupId,
+				setRoomMemberPublicKeys({
+					roomId,
 					memberPublicKeys: response.members,
 				})
 			);
@@ -242,18 +242,18 @@ export const useFetchGroupMemberPublicKeys = (groupId: string) => {
 		} finally {
 			setLoading(false);
 		}
-	}, [groupId, dispatch]);
+	}, [roomId, dispatch]);
 
 	return { memberPublicKeys, fetch, loading, error };
 };
 
 /**
- * Encrypt a message for group recipients
+ * Encrypt a message for room recipients
  */
-export const useEncryptGroupMessage = (groupId: string) => {
+export const useEncryptRoomMessage = (roomId: string) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setErrorMsg] = useState<string | null>(null);
-	const memberPublicKeys = useAppSelector(selectGroupMemberPublicKeys(groupId));
+	const memberPublicKeys = useAppSelector(selectRoomMemberPublicKeys(roomId));
 
 	const encrypt = useCallback(
 		(message: string): RecipientEncryptedMessages | null => {
@@ -306,14 +306,14 @@ export const useDecryptMessage = () => {
 			ciphertext: string,
 			iv: string,
 			senderPublicKey: string,
-			groupId?: string
+			roomId?: string
 		): string | null => {
 			try {
 				setLoading(true);
 				setErrorMsg(null);
 
-				const yourPrivateKey = groupId
-					? deviceManager.getGroupPrivateKey(groupId)
+				const yourPrivateKey = roomId
+					? deviceManager.getRoomPrivateKey(roomId)
 					: deviceManager.getIdentityPrivateKey();
 
 				if (!yourPrivateKey) {
@@ -344,16 +344,15 @@ export const useDecryptMessage = () => {
 };
 
 /**
- * Send encrypted group message
+ * Send encrypted room message
  */
-export const useSendEncryptedGroupMessage = (groupId: string) => {
+export const useSendEncryptedRoomMessage = (roomId: string) => {
 	const dispatch = useAppDispatch();
 	const [loading, setLoading] = useState(false);
 	const [error, setErrorMsg] = useState<string | null>(null);
 
 	const send = useCallback(
 		async (
-			message: string,
 			encryptedFor: RecipientEncryptedMessages,
 			userId: string
 		) => {
@@ -361,7 +360,7 @@ export const useSendEncryptedGroupMessage = (groupId: string) => {
 				setLoading(true);
 				setErrorMsg(null);
 
-				const response = await e2eeApi.storeEncryptedGroupMessage(groupId, {
+				const response = await e2eeApi.storeEncryptedRoomMessage(roomId, {
 					senderId: userId,
 					recipients: encryptedFor,
 					senderKeys: undefined, // Phase 2 optimization
@@ -382,7 +381,7 @@ export const useSendEncryptedGroupMessage = (groupId: string) => {
 				setLoading(false);
 			}
 		},
-		[groupId, dispatch]
+		[roomId, dispatch]
 	);
 
 	return { send, loading, error };
@@ -404,22 +403,22 @@ export const useRotateIdentityKeys = () => {
 
 				const newKeypair = deviceManager.rotateIdentityKeyPair();
 				const deviceId = deviceManager.getDeviceId();
-				const groupKeys = deviceManager.getAllGroupKeyPairs();
+				const roomKeys = deviceManager.getAllRoomKeyPairs();
 
 				if (!deviceId) {
 					throw new Error('Device not initialized');
 				}
 
-				const groupKeysMap: { [groupId: string]: string } = {};
-				for (const [groupId, keypair] of Object.entries(groupKeys)) {
-					groupKeysMap[groupId] = keypair.publicKey;
+				const roomKeysMap: { [roomId: string]: string } = {};
+				for (const [roomId, keypair] of Object.entries(roomKeys)) {
+					roomKeysMap[roomId] = keypair.publicKey;
 				}
 
 				const response = await e2eeApi.rotateDeviceKeys(userId, {
 					deviceId,
 					deviceName: deviceManager.getDeviceName() || 'Web Device',
 					newIdentityPublicKey: newKeypair.publicKey,
-					groupKeys: groupKeysMap,
+					roomKeys: roomKeysMap,
 				});
 
 				if (!response.success) {
@@ -476,9 +475,9 @@ export const useClearE2EEData = () => {
  * Get encrypted message ready for sending
  * Combines encryption and preparation for API
  */
-export const usePrepareEncryptedMessage = (groupId: string, userId: string) => {
-	const { encrypt, loading, error } = useEncryptGroupMessage(groupId);
-	const { send } = useSendEncryptedGroupMessage(groupId);
+export const usePrepareEncryptedMessage = (roomId: string, userId: string) => {
+	const { encrypt, loading, error } = useEncryptRoomMessage(roomId);
+	const { send } = useSendEncryptedRoomMessage(roomId);
 
 	const prepare = useCallback(
 		async (message: string) => {
@@ -488,7 +487,7 @@ export const usePrepareEncryptedMessage = (groupId: string, userId: string) => {
 					throw new Error('Failed to encrypt message');
 				}
 
-				const response = await send(message, encrypted, userId);
+				const response = await send(encrypted, userId);
 				return { encrypted, response };
 			} catch (err) {
 				throw err;

@@ -186,45 +186,45 @@ export async function testDeviceInitialization(): Promise<boolean> {
 }
 
 /**
- * Test: Group key management
+ * Test: Room key management
  */
-export async function testGroupKeyManagement(): Promise<boolean> {
+export async function testRoomKeyManagement(): Promise<boolean> {
 	try {
 		deviceManager.clearDeviceData();
 		deviceManager.initializeDevice();
 
-		const groupId = 'test-group-123';
+		const roomId = 'test-room-123';
 
-		// Add group key
+		// Add room key
 		const keypair = crypto.generateBoxKeypair();
-		const groupKeyPair = {
-			groupId,
+		const roomKeyPair = {
+			roomId,
 			publicKey: keypair.publicKey,
 			privateKey: keypair.privateKey,
 		};
 
-		deviceManager.setGroupKeyPair(groupKeyPair);
+		deviceManager.setRoomKeyPair(roomKeyPair);
 
-		// Retrieve group key
-		const retrieved = deviceManager.getGroupKeyPair(groupId);
-		if (!retrieved || retrieved.groupId !== groupId) {
-			console.error('Group key retrieval failed');
+		// Retrieve room key
+		const retrieved = deviceManager.getRoomKeyPair(roomId);
+		if (!retrieved || retrieved.roomId !== roomId) {
+			console.error('Room key retrieval failed');
 			return false;
 		}
 
-		// Remove group key
-		deviceManager.removeGroupKeyPair(groupId);
-		const afterRemoval = deviceManager.getGroupKeyPair(groupId);
+		// Remove room key
+		deviceManager.removeRoomKeyPair(roomId);
+		const afterRemoval = deviceManager.getRoomKeyPair(roomId);
 		if (afterRemoval) {
-			console.error('Group key removal failed');
+			console.error('Room key removal failed');
 			return false;
 		}
 
-		console.log('✓ Group key management test passed');
+		console.log('✓ Room key management test passed');
 		deviceManager.clearDeviceData(); // Cleanup
 		return true;
 	} catch (error) {
-		console.error('Group key management test failed:', error);
+		console.error('Room key management test failed:', error);
 		return false;
 	}
 }
@@ -384,7 +384,7 @@ export async function runAllTests(): Promise<{
 		{ name: 'Encryption Roundtrip', fn: testEncryptionRoundtrip },
 		{ name: 'Multiple Recipient Encryption', fn: testMultipleRecipientEncryption },
 		{ name: 'Device Initialization', fn: testDeviceInitialization },
-		{ name: 'Group Key Management', fn: testGroupKeyManagement },
+		{ name: 'Room Key Management', fn: testRoomKeyManagement },
 		{ name: 'Key Rotation', fn: testKeyRotation },
 		{ name: 'Hashing', fn: testHashing },
 		{ name: 'Key Derivation', fn: testKeyDerivation },

@@ -7,7 +7,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
 	DeviceKeyPair,
-	GroupKeyPair,
+	RoomKeyPair,
 	MemberPublicKeys,
 	E2EEDeviceState,
 } from '@/lib/e2ee-types';
@@ -57,26 +57,26 @@ export const e2eeSlice = createSlice({
 			}
 		},
 
-		// Add or update group keypair
-		setGroupKeyPair: (state, action: PayloadAction<GroupKeyPair>) => {
+		// Add or update room keypair
+		setRoomKeyPair: (state, action: PayloadAction<RoomKeyPair>) => {
 			if (state.deviceState) {
-				state.deviceState.groupKeyPairs[action.payload.groupId] = action.payload;
+				state.deviceState.roomKeyPairs[action.payload.roomId] = action.payload;
 			}
 		},
 
-		// Remove group keypair
-		removeGroupKeyPair: (state, action: PayloadAction<string>) => {
+		// Remove room keypair
+		removeRoomKeyPair: (state, action: PayloadAction<string>) => {
 			if (state.deviceState) {
-				delete state.deviceState.groupKeyPairs[action.payload];
+				delete state.deviceState.roomKeyPairs[action.payload];
 			}
 		},
 
-		// Set member public keys for a group
-		setGroupMemberPublicKeys: (
+		// Set member public keys for a room
+		setRoomMemberPublicKeys: (
 			state,
-			action: PayloadAction<{ groupId: string; memberPublicKeys: MemberPublicKeys }>
+			action: PayloadAction<{ roomId: string; memberPublicKeys: MemberPublicKeys }>
 		) => {
-			state.memberPublicKeys[action.payload.groupId] =
+			state.memberPublicKeys[action.payload.roomId] =
 				action.payload.memberPublicKeys;
 			state.error = null;
 		},
@@ -85,19 +85,19 @@ export const e2eeSlice = createSlice({
 		updateMemberPublicKey: (
 			state,
 			action: PayloadAction<{
-				groupId: string;
+				roomId: string;
 				userId: string;
 				deviceId: string;
 				publicKey: string;
 			}>
 		) => {
-			if (!state.memberPublicKeys[action.payload.groupId]) {
-				state.memberPublicKeys[action.payload.groupId] = {};
+			if (!state.memberPublicKeys[action.payload.roomId]) {
+				state.memberPublicKeys[action.payload.roomId] = {};
 			}
-			if (!state.memberPublicKeys[action.payload.groupId][action.payload.userId]) {
-				state.memberPublicKeys[action.payload.groupId][action.payload.userId] = {};
+			if (!state.memberPublicKeys[action.payload.roomId][action.payload.userId]) {
+				state.memberPublicKeys[action.payload.roomId][action.payload.userId] = {};
 			}
-			state.memberPublicKeys[action.payload.groupId][
+			state.memberPublicKeys[action.payload.roomId][
 				action.payload.userId
 			][action.payload.deviceId] = action.payload.publicKey;
 			state.error = null;
@@ -106,30 +106,30 @@ export const e2eeSlice = createSlice({
 		// Remove member public keys
 		removeMemberPublicKeys: (
 			state,
-			action: PayloadAction<{ groupId: string; userId: string }>
+			action: PayloadAction<{ roomId: string; userId: string }>
 		) => {
-			if (state.memberPublicKeys[action.payload.groupId]) {
-				delete state.memberPublicKeys[action.payload.groupId][
+			if (state.memberPublicKeys[action.payload.roomId]) {
+				delete state.memberPublicKeys[action.payload.roomId][
 					action.payload.userId
 				];
 			}
 		},
 
-		// Remove device public key from group
+		// Remove device public key from room
 		removeDevicePublicKey: (
 			state,
 			action: PayloadAction<{
-				groupId: string;
+				roomId: string;
 				userId: string;
 				deviceId: string;
 			}>
 		) => {
 			if (
-				state.memberPublicKeys[action.payload.groupId]?.[
+				state.memberPublicKeys[action.payload.roomId]?.[
 					action.payload.userId
 				]?.[action.payload.deviceId]
 			) {
-				delete state.memberPublicKeys[action.payload.groupId][
+				delete state.memberPublicKeys[action.payload.roomId][
 					action.payload.userId
 				][action.payload.deviceId];
 			}
@@ -179,9 +179,9 @@ export const {
 	setDeviceState,
 	setInitializing,
 	updateDeviceName,
-	setGroupKeyPair,
-	removeGroupKeyPair,
-	setGroupMemberPublicKeys,
+	setRoomKeyPair,
+	removeRoomKeyPair,
+	setRoomMemberPublicKeys,
 	updateMemberPublicKey,
 	removeMemberPublicKeys,
 	removeDevicePublicKey,
@@ -199,11 +199,11 @@ export const selectDeviceState = (state: any) => state.e2ee.deviceState;
 export const selectDeviceId = (state: any) => state.e2ee.deviceState?.deviceId;
 export const selectIdentityPublicKey = (state: any) =>
 	state.e2ee.deviceState?.identityKeyPair?.publicKey;
-export const selectGroupMemberPublicKeys = (groupId: string) => (state: any) =>
-	state.e2ee.memberPublicKeys[groupId];
+export const selectRoomMemberPublicKeys = (roomId: string) => (state: any) =>
+	state.e2ee.memberPublicKeys[roomId];
 export const selectE2EEError = (state: any) => state.e2ee.error;
 export const selectIsInitializing = (state: any) => state.e2ee.isInitializing;
 export const selectKeyRotationInProgress = (deviceId: string) => (state: any) =>
 	state.e2ee.keyRotationInProgress[deviceId];
-export const selectGroupPrivateKey = (groupId: string) => (state: any) =>
-	state.e2ee.deviceState?.groupKeyPairs[groupId]?.privateKey;
+export const selectRoomPrivateKey = (roomId: string) => (state: any) =>
+	state.e2ee.deviceState?.roomKeyPairs[roomId]?.privateKey;

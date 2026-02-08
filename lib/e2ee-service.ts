@@ -8,7 +8,7 @@
 import * as crypto from './crypto';
 import * as deviceManager from './device-manager';
 import * as e2eeApi from './e2ee-api';
-import { RecipientEncryptedMessages, EncryptedGroupMessage } from './e2ee-types';
+import { RecipientEncryptedMessages, EncryptedRoomMessage } from './e2ee-types';
 
 /**
  * E2EE Service - Main interface for E2EE operations
@@ -39,7 +39,7 @@ export class E2EEService {
 	/**
 	 * Complete setup flow: register keys on backend
 	 */
-	async setupDeviceKeys(userId: string, groupIds: string[]): Promise<void> {
+	async setupDeviceKeys(userId: string, roomIds: string[]): Promise<void> {
 		try {
 			// 1. Register identity key
 			const deviceId = deviceManager.getDeviceId();
@@ -54,27 +54,10 @@ export class E2EEService {
 
 			// Debug logging for base64 validation
 			const isValidKey = crypto.isValidBase64Key(normalizedIdentityPublicKey);
-			console.log('Device keys debug info:', {
-				userId,
-				deviceId,
-				identityPublicKey: normalizedIdentityPublicKey.substring(0, 30) + '...',
-				keyType: typeof identityPublicKey,
-				keyLength: normalizedIdentityPublicKey?.length,
-				isValidBase64Key: isValidKey,
-				keyIsBase64Pattern: /^[A-Za-z0-9+/=]+$/.test(normalizedIdentityPublicKey || ''),
-				trimmedLength: normalizedIdentityPublicKey?.trim().length,
-				hasWhitespace: normalizedIdentityPublicKey !== normalizedIdentityPublicKey?.trim()
-			});
 
 			if (!isValidKey) {
 				throw new Error(`Invalid base64 identityPublicKey: ${normalizedIdentityPublicKey.substring(0, 50)}...`);
 			}
-
-			console.log('Registering device keys with backend...', {
-				userId,
-				deviceId,
-				identityPublicKey: normalizedIdentityPublicKey.substring(0, 30) + '...'
-			});
 
 			await e2eeApi.registerDeviceIdentityKey({
 				userId,
@@ -83,31 +66,31 @@ export class E2EEService {
 				identityPublicKey: normalizedIdentityPublicKey,
 			});
 
-			// 2. Register group keys for each group
-			for (const groupId of groupIds) {
-				let groupKeyPair = deviceManager.getGroupKeyPair(groupId);
-				if (!groupKeyPair) {
+			// 2. Register room keys for each room
+			for (const roomId of roomIds) {
+				let roomKeyPair = deviceManager.getRoomKeyPair(roomId);
+				if (!roomKeyPair) {
 					const keypair = crypto.generateBoxKeypair();
-					groupKeyPair = {
-						groupId,
+					roomKeyPair = {
+						roomId,
 						publicKey: keypair.publicKey,
 						privateKey: keypair.privateKey,
 					};
-					deviceManager.setGroupKeyPair(groupKeyPair);
+					deviceManager.setRoomKeyPair(roomKeyPair);
 				}
 
-				// Validate group public key before sending
-				const normalizedGroupPublicKey = crypto.normalizeBase64Key(groupKeyPair.publicKey);
-				const isValidGroupKey = crypto.isValidBase64Key(normalizedGroupPublicKey);
-				if (!isValidGroupKey) {
-					throw new Error(`Invalid base64 group public key for group ${groupId}: ${normalizedGroupPublicKey.substring(0, 50)}...`);
+				// Validate room public key before sending
+				const normalizedRoomPublicKey = crypto.normalizeBase64Key(roomKeyPair.publicKey);
+				const isValidRoomKey = crypto.isValidBase64Key(normalizedRoomPublicKey);
+				if (!isValidRoomKey) {
+					throw new Error(`Invalid base64 room public key for room ${roomId}: ${normalizedRoomPublicKey.substring(0, 50)}...`);
 				}
 
-				await e2eeApi.registerDeviceGroupKey(groupId, {
+				await e2eeApi.registerDeviceRoomKey(roomId, {
 					userId,
 					deviceId,
 					deviceName: deviceName || 'Web Device',
-					groupPublicKey: normalizedGroupPublicKey,
+					roomPublicKey: normalizedRoomPublicKey,
 				});
 			}
 		} catch (error) {
@@ -117,10 +100,10 @@ export class E2EEService {
 	}
 
 	/**
-	 * Encrypt a message for group members
+	 * Encrypt a message for room members
 	 */
-	async encryptMessageForGroup(
-		groupId: string,
+	async encryptMessageForRoom(
+		roomId: string,
 		message: string,
 		memberPublicKeys: { [userId: string]: { [deviceId: string]: string } }
 	): Promise<RecipientEncryptedMessages> {
@@ -145,17 +128,17 @@ export class E2EEService {
 	}
 
 	/**
-	 * Decrypt a message received from a group
+	 * Decrypt a message received from a room
 	 */
-	async decryptGroupMessage(
+	async decryptRoomMessage(
 		ciphertext: string,
 		iv: string,
 		senderPublicKey: string,
-		groupId?: string
+		roomId?: string
 	): Promise<string> {
 		try {
-			const yourPrivateKey = groupId
-				? deviceManager.getGroupPrivateKey(groupId)
+			const yourPrivateKey = roomId
+				? deviceManager.getRoomPrivateKey(roomId)
 				: deviceManager.getIdentityPrivateKey();
 
 			if (!yourPrivateKey) {
@@ -170,24 +153,24 @@ export class E2EEService {
 	}
 
 	/**
-	 * Send encrypted message to group
+	 * Send encrypted message to room members
 	 */
 	async sendEncryptedMessage(
-		groupId: string,
+		roomId: string,
 		userId: string,
 		message: string,
 		recipientPublicKeys: { [userId: string]: { [deviceId: string]: string } }
 	): Promise<string> {
 		try {
 			// 1. Encrypt message
-			const encrypted = await this.encryptMessageForGroup(
-				groupId,
+			const encrypted = await this.encryptMessageForRoom(
+				roomId,
 				message,
 				recipientPublicKeys
 			);
 
 			// 2. Send encrypted message
-			const response = await e2eeApi.storeEncryptedGroupMessage(groupId, {
+			const response = await e2eeApi.storeEncryptedRoomMessage(roomId, {
 				senderId: userId,
 				recipients: encrypted,
 				senderKeys: undefined,
@@ -211,22 +194,22 @@ export class E2EEService {
 		try {
 			const newKeypair = deviceManager.rotateIdentityKeyPair();
 			const deviceId = deviceManager.getDeviceId();
-			const groupKeys = deviceManager.getAllGroupKeyPairs();
+			const roomKeys = deviceManager.getAllRoomKeyPairs();
 
 			if (!deviceId) {
 				throw new Error('Device not initialized');
 			}
 
-			const groupKeysMap: { [groupId: string]: string } = {};
-			for (const [groupId, keypair] of Object.entries(groupKeys)) {
-				groupKeysMap[groupId] = keypair.publicKey;
+			const roomKeysMap: { [roomId: string]: string } = {};
+			for (const [roomId, keypair] of Object.entries(roomKeys)) {
+				roomKeysMap[roomId] = keypair.publicKey;
 			}
 
 			await e2eeApi.rotateDeviceKeys(userId, {
 				deviceId,
 				deviceName: deviceManager.getDeviceName() || 'Web Device',
 				newIdentityPublicKey: newKeypair.publicKey,
-				groupKeys: groupKeysMap,
+				roomKeys: roomKeysMap,
 			});
 		} catch (error) {
 			console.error('Key rotation failed:', error);
@@ -235,13 +218,13 @@ export class E2EEService {
 	}
 
 	/**
-	 * Get member public keys for a group
+	 * Get member public keys for a room
 	 */
 	async getMemberPublicKeys(
-		groupId: string
+		roomId: string
 	): Promise<{ [userId: string]: { [deviceId: string]: string } }> {
 		try {
-			const response = await e2eeApi.getGroupPublicKeys(groupId);
+			const response = await e2eeApi.getRoomPublicKeys(roomId);
 			if (!response.success) {
 				throw new Error('Failed to fetch member public keys');
 			}
@@ -253,9 +236,9 @@ export class E2EEService {
 	}
 
 	/**
-	 * Remove yourself from a group (remove your keys)
+	 * Remove yourself from a room (remove your keys)
 	 */
-	async removeFromGroup(groupId: string, userId: string): Promise<void> {
+	async removeFromRoom(roomId: string, userId: string): Promise<void> {
 		try {
 			const deviceId = deviceManager.getDeviceId();
 			if (!deviceId) {
@@ -263,12 +246,12 @@ export class E2EEService {
 			}
 
 			// Remove device key first
-			await e2eeApi.removeDeviceGroupKey(groupId, userId, deviceId);
+			await e2eeApi.removeDeviceRoomKey(roomId, userId, deviceId);
 
 			// Remove from local storage
-			deviceManager.removeGroupKeyPair(groupId);
+			deviceManager.removeRoomKeyPair(roomId);
 		} catch (error) {
-			console.error('Failed to remove from group:', error);
+			console.error('Failed to remove from room:', error);
 			throw error;
 		}
 	}
@@ -342,7 +325,7 @@ export const diagnoseE2EEState = async () => {
 				initialized: deviceState.initialized,
 				deviceId: deviceState.deviceId,
 				hasIdentityKeypair: !!deviceState.identityKeyPair,
-				groupKeyCount: Object.keys(deviceState.groupKeyPairs || {}).length
+				roomKeyCount: Object.keys(deviceState.roomKeyPairs || {}).length
 			} : null
 		});
 
@@ -418,12 +401,10 @@ export const diagnoseE2EEState = async () => {
 			readyForRegistration: !!identityPublicKey && identityKeyValid
 		};
 
-		console.log('=== E2EE Diagnostics ===', result);
 		return result;
 	} catch (error) {
 		console.error('Diagnostic failed:', error);
 		const result = { error: String(error), timestamp: new Date().toISOString() };
-		console.log('=== E2EE Diagnostics (Failed) ===', result);
 		return result;
 	}
 };
@@ -431,5 +412,4 @@ export const diagnoseE2EEState = async () => {
 // Make diagnostic function available globally for browser console debugging
 if (typeof window !== 'undefined') {
 	(window as any).__e2eeDiagnostics = diagnoseE2EEState;
-	console.log('E2EE diagnostics available: call window.__e2eeDiagnostics()');
 }
