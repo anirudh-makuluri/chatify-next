@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * E2EE Service - High-level E2EE operations
  * This service provides a clean API for common E2EE operations
@@ -48,11 +50,37 @@ export class E2EEService {
 				throw new Error('Device not properly initialized');
 			}
 
+			const normalizedIdentityPublicKey = crypto.normalizeBase64Key(identityPublicKey);
+
+			// Debug logging for base64 validation
+			const isValidKey = crypto.isValidBase64Key(normalizedIdentityPublicKey);
+			console.log('Device keys debug info:', {
+				userId,
+				deviceId,
+				identityPublicKey: normalizedIdentityPublicKey.substring(0, 30) + '...',
+				keyType: typeof identityPublicKey,
+				keyLength: normalizedIdentityPublicKey?.length,
+				isValidBase64Key: isValidKey,
+				keyIsBase64Pattern: /^[A-Za-z0-9+/=]+$/.test(normalizedIdentityPublicKey || ''),
+				trimmedLength: normalizedIdentityPublicKey?.trim().length,
+				hasWhitespace: normalizedIdentityPublicKey !== normalizedIdentityPublicKey?.trim()
+			});
+
+			if (!isValidKey) {
+				throw new Error(`Invalid base64 identityPublicKey: ${normalizedIdentityPublicKey.substring(0, 50)}...`);
+			}
+
+			console.log('Registering device keys with backend...', {
+				userId,
+				deviceId,
+				identityPublicKey: normalizedIdentityPublicKey.substring(0, 30) + '...'
+			});
+
 			await e2eeApi.registerDeviceIdentityKey({
 				userId,
 				deviceId,
 				deviceName: deviceName || 'Web Device',
-				identityPublicKey,
+				identityPublicKey: normalizedIdentityPublicKey,
 			});
 
 			// 2. Register group keys for each group
@@ -68,11 +96,18 @@ export class E2EEService {
 					deviceManager.setGroupKeyPair(groupKeyPair);
 				}
 
+				// Validate group public key before sending
+				const normalizedGroupPublicKey = crypto.normalizeBase64Key(groupKeyPair.publicKey);
+				const isValidGroupKey = crypto.isValidBase64Key(normalizedGroupPublicKey);
+				if (!isValidGroupKey) {
+					throw new Error(`Invalid base64 group public key for group ${groupId}: ${normalizedGroupPublicKey.substring(0, 50)}...`);
+				}
+
 				await e2eeApi.registerDeviceGroupKey(groupId, {
 					userId,
 					deviceId,
 					deviceName: deviceName || 'Web Device',
-					groupPublicKey: groupKeyPair.publicKey,
+					groupPublicKey: normalizedGroupPublicKey,
 				});
 			}
 		} catch (error) {
@@ -270,3 +305,131 @@ export class E2EEService {
 export const getE2EEService = (): E2EEService => {
 	return E2EEService.getInstance();
 };
+/**
+ * Diagnostic function - can be called from browser console for debugging
+ * Returns detailed information about E2EE state and key validation
+ */
+export const diagnoseE2EEState = async () => {
+	try {
+		const result: any = {
+			timestamp: new Date().toISOString(),
+			steps: []
+		};
+
+		// Step 1: Check if sodium is ready
+		const sodiumReady = crypto.isSodiumReady();
+		result.steps.push({
+			step: 'Check Sodium',
+			success: sodiumReady,
+			sodiumReady
+		});
+
+		if (!sodiumReady) {
+			await crypto.initiateSodium();
+			result.steps.push({
+				step: 'Initialize Sodium',
+				success: true,
+				message: 'Sodium initialized'
+			});
+		}
+
+		// Step 2: Check device state
+		const deviceState = deviceManager.getDeviceState();
+		result.steps.push({
+			step: 'Get Device State',
+			success: !!deviceState,
+			deviceState: deviceState ? {
+				initialized: deviceState.initialized,
+				deviceId: deviceState.deviceId,
+				hasIdentityKeypair: !!deviceState.identityKeyPair,
+				groupKeyCount: Object.keys(deviceState.groupKeyPairs || {}).length
+			} : null
+		});
+
+		// Step 3: Get identity public key
+		const identityPublicKey = deviceManager.getIdentityPublicKey();
+		const identityKeyValid = identityPublicKey ? crypto.isValidBase64Key(identityPublicKey) : false;
+		
+		// Detailed inspection if key exists
+		let keyInspection = null;
+		if (identityPublicKey) {
+			keyInspection = crypto.inspectBase64Key(identityPublicKey);
+		}
+		
+		result.steps.push({
+			step: 'Get Identity Public Key',
+			success: !!identityPublicKey,
+			identityPublicKey: identityPublicKey ? identityPublicKey.substring(0, 40) + '...' : 'NULL',
+			keyLength: identityPublicKey?.length || 0,
+			isValidBase64: identityKeyValid,
+			keyInspection: keyInspection
+		});
+
+		// Step 4: Try generating a test keypair
+		try {
+			const testKeypair = crypto.generateBoxKeypair();
+			const testPubKeyValid = crypto.isValidBase64Key(testKeypair.publicKey);
+			const testPrivKeyValid = crypto.isValidBase64Key(testKeypair.privateKey);
+
+			result.steps.push({
+				step: 'Generate Test Keypair',
+				success: true,
+				publicKeyLength: testKeypair.publicKey.length,
+				publicKeyValid: testPubKeyValid,
+				publicKeyPreview: testKeypair.publicKey.substring(0, 40) + '...',
+				privateKeyLength: testKeypair.privateKey.length,
+				privateKeyValid: testPrivKeyValid,
+				publicKeyCharacters: {
+					hasLetters: /[A-Za-z]/.test(testKeypair.publicKey),
+					hasNumbers: /[0-9]/.test(testKeypair.publicKey),
+					hasSpecial: /[+/=]/.test(testKeypair.publicKey),
+					onlyBase64: /^[A-Za-z0-9+/=]+$/.test(testKeypair.publicKey)
+				}
+			});
+		} catch (keyError) {
+			result.steps.push({
+				step: 'Generate Test Keypair',
+				success: false,
+				error: String(keyError)
+			});
+		}
+
+		// Step 5: localStorage check
+		try {
+			const stored = localStorage.getItem('e2ee_device_state');
+			result.steps.push({
+				step: 'localStorage Check',
+				success: !!stored,
+				deviceStoreSize: stored?.length || 0,
+				hasDeviceState: !!stored
+			});
+		} catch (storageError) {
+			result.steps.push({
+				step: 'localStorage Check',
+				success: false,
+				error: String(storageError)
+			});
+		}
+
+		result.summary = {
+			sodiumWorking: sodiumReady,
+			deviceInitialized: !!deviceState?.initialized,
+			identityKeyValid,
+			readyForRegistration: !!identityPublicKey && identityKeyValid
+		};
+
+		console.log('=== E2EE Diagnostics ===', result);
+		return result;
+	} catch (error) {
+		console.error('Diagnostic failed:', error);
+		const result = { error: String(error), timestamp: new Date().toISOString() };
+		console.log('=== E2EE Diagnostics (Failed) ===', result);
+		return result;
+	}
+};
+
+// Make diagnostic function available globally for browser console debugging
+if (typeof window !== 'undefined') {
+	(window as any).__e2eeDiagnostics = diagnoseE2EEState;
+	console.log('E2EE diagnostics available: call window.__e2eeDiagnostics()');
+}

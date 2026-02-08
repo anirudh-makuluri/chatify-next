@@ -6,9 +6,7 @@ import { TAuthUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import ReduxProvider from '@/redux/redux-provider';
 import { Tooltip, TooltipProvider } from '@radix-ui/react-tooltip';
-import { getIdentityKeyForDevice } from '@/lib/e2ee-api';
-import { E2EEService } from '@/lib/e2ee-service';
-import { getDeviceId } from '@/lib/device-manager';
+
 
 type TUserContext = {
 	user: TAuthUser | null,
@@ -82,11 +80,15 @@ export function Providers({ children }: { children: ReactNode }) {
 
 	async function ensureE2EEKeys(normalizedUser: TAuthUser) {
 		try {
+			// Dynamically import E2EE modules (only on client, after login)
+			const e2eeServiceModule = await import('@/lib/e2ee-service');
+			const deviceManagerModule = await import('@/lib/device-manager');
+			const e2eeApiModule = await import('@/lib/e2ee-api');
 
-			const e2eeService = E2EEService.getInstance();
+			const e2eeService = e2eeServiceModule.getE2EEService();
 			await e2eeService.initialize();
 
-			const deviceId = getDeviceId();
+			const deviceId = deviceManagerModule.getDeviceId();
 			const userId = normalizedUser.uid;
 			if (!deviceId) {
 				console.warn('E2EE device is not initialized yet.');
@@ -95,7 +97,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
 			let keyExists = false;
 			try {
-				const response = await getIdentityKeyForDevice(userId, deviceId);
+				const response = await e2eeApiModule.getIdentityKeyForDevice(userId, deviceId);
 				keyExists = !!response?.success && !!response?.publicKey;
 			} catch (error) {
 				if (error instanceof Response && error.status === 404) {
@@ -113,7 +115,7 @@ export function Providers({ children }: { children: ReactNode }) {
 			const groupIds = Array.from(
 				new Set(
 					(normalizedUser.rooms || [])
-						.filter((room) => !room.is_ai_room)
+						.filter((room) => !room.roomId.startsWith('ai-assistant-'))
 						.map((room) => room.roomId)
 				)
 			);

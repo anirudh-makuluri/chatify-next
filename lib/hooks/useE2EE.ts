@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * E2EE Hooks - Convenient hooks for E2EE operations in components
  */

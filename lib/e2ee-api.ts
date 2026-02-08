@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * E2EE API Client
  * Handles all E2EE-related API calls

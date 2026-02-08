@@ -1,9 +1,42 @@
+'use client'
+
 // @ts-ignore - libsodium.js doesn't have official type declarations
 import sodium from 'libsodium-wrappers-sumo';
 import { EncryptedData, SodiumBoxKeypair } from './e2ee-types';
 
 // Initialize sodium (call once at app startup)
 let sodiumReady = false;
+
+// Defer variant initialization until runtime to avoid server-side import issues
+const getBase64Variants = () => {
+	try {
+		return {
+			ORIGINAL: sodium.base64_variants.ORIGINAL,
+			URLSAFE: sodium.base64_variants.URLSAFE,
+		};
+	} catch (_error) {
+		// Return falsy defaults if sodium not available (e.g., on server)
+		return { ORIGINAL: null, URLSAFE: null };
+	}
+};
+
+const toBase64 = (data: Uint8Array): string => {
+	const variants = getBase64Variants();
+	return variants.ORIGINAL ? sodium.to_base64(data, variants.ORIGINAL) : sodium.to_base64(data);
+};
+
+const fromBase64 = (value: string): Uint8Array => {
+	const variants = getBase64Variants();
+	try {
+		return variants.ORIGINAL ? sodium.from_base64(value, variants.ORIGINAL) : sodium.from_base64(value);
+	} catch (_error) {
+		return variants.URLSAFE ? sodium.from_base64(value, variants.URLSAFE) : sodium.from_base64(value);
+	}
+};
+
+export const normalizeBase64Key = (value: string): string => {
+	return toBase64(fromBase64(value));
+};
 
 export const initiateSodium = async (): Promise<void> => {
 	if (!sodiumReady) {
@@ -26,9 +59,28 @@ export const generateBoxKeypair = (): {
 
 	const keypair = sodium.crypto_box_keypair();
 
+	const publicKeyBase64 = toBase64(keypair.publicKey);
+	const privateKeyBase64 = toBase64(keypair.privateKey);
+
+	// Validate that keys are properly encoded
+	if (!publicKeyBase64 || typeof publicKeyBase64 !== 'string') {
+		throw new Error(`Invalid public key encoding: ${typeof publicKeyBase64}`);
+	}
+	if (!privateKeyBase64 || typeof privateKeyBase64 !== 'string') {
+		throw new Error(`Invalid private key encoding: ${typeof privateKeyBase64}`);
+	}
+
+	console.log('Generated keypair:', {
+		publicKeyType: typeof publicKeyBase64,
+		publicKeyLength: publicKeyBase64.length,
+		publicKeyPreview: publicKeyBase64.substring(0, 20) + '...',
+		privateKeyType: typeof privateKeyBase64,
+		privateKeyLength: privateKeyBase64.length,
+	});
+
 	return {
-		publicKey: sodium.to_base64(keypair.publicKey),
-		privateKey: sodium.to_base64(keypair.privateKey),
+		publicKey: publicKeyBase64,
+		privateKey: privateKeyBase64,
 	};
 };
 
@@ -49,7 +101,7 @@ export const encryptMessageForRecipient = (
 	}
 
 	try {
-		const recipientPublicKey = sodium.from_base64(recipientPublicKeyBase64);
+		const recipientPublicKey = fromBase64(recipientPublicKeyBase64);
 		const messageBytes = sodium.from_string(message);
 
 		// Anonymous public key encryption (no sender key required)
@@ -59,7 +111,7 @@ export const encryptMessageForRecipient = (
 		);
 
 		return {
-			ciphertext: sodium.to_base64(ciphertext),
+			ciphertext: toBase64(ciphertext),
 			iv: '',
 		};
 	} catch (error) {
@@ -118,13 +170,13 @@ export const decryptMessage = (
 	}
 
 	try {
-		const ciphertextBytes = sodium.from_base64(ciphertext);
-		const yourPrivateKey = sodium.from_base64(yourPrivateKeyBase64);
+		const ciphertextBytes = fromBase64(ciphertext);
+		const yourPrivateKey = fromBase64(yourPrivateKeyBase64);
 		let decrypted: Uint8Array;
 
 		if (iv) {
-			const nonce = sodium.from_base64(iv);
-			const senderPublicKey = sodium.from_base64(senderPublicKeyBase64);
+			const nonce = fromBase64(iv);
+			const senderPublicKey = fromBase64(senderPublicKeyBase64);
 
 			// Decrypt using sender's public key and your private key
 			decrypted = sodium.crypto_box_open_easy(
@@ -163,21 +215,21 @@ export const generateRandomNonce = (): string => {
 	}
 
 	const nonce = sodium.randombytes_buf(sodium.crypto_box_NONCEBYTES);
-	return sodium.to_base64(nonce);
+	return toBase64(nonce);
 };
 
 /**
  * Convert base64 string to Uint8Array
  */
 export const base64ToUint8Array = (base64: string): Uint8Array => {
-	return sodium.from_base64(base64);
+	return fromBase64(base64);
 };
 
 /**
  * Convert Uint8Array to base64 string
  */
 export const uint8ArrayToBase64 = (data: Uint8Array): string => {
-	return sodium.to_base64(data);
+	return toBase64(data);
 };
 
 /**
@@ -208,7 +260,7 @@ export const hashString = (input: string): string => {
 		sodium.from_string(input),
 		null
 	);
-	return sodium.to_base64(hash);
+	return toBase64(hash);
 };
 
 /**
@@ -235,8 +287,8 @@ export const deriveKeyFromPassword = (
 	);
 
 	return {
-		key: sodium.to_base64(key),
-		salt: sodium.to_base64(saltBytes),
+		key: toBase64(key),
+		salt: toBase64(saltBytes),
 	};
 };
 
@@ -252,13 +304,13 @@ export const signMessage = (
 		throw new Error('Sodium not initialized. Call initiateSodium() first.');
 	}
 
-	const secretKey = sodium.from_base64(secretKeyBase64);
+	const secretKey = fromBase64(secretKeyBase64);
 	const signature = sodium.crypto_sign_detached(
 		sodium.from_string(message),
 		secretKey
 	);
 
-	return sodium.to_base64(signature);
+	return toBase64(signature);
 };
 
 /**
@@ -274,8 +326,8 @@ export const verifySignature = (
 	}
 
 	try {
-		const publicKey = sodium.from_base64(publicKeyBase64);
-		const signatureBytes = sodium.from_base64(signature);
+		const publicKey = fromBase64(publicKeyBase64);
+		const signatureBytes = fromBase64(signature);
 		const messageBytes = sodium.from_string(message);
 
 		return sodium.crypto_sign_verify_detached(
@@ -318,4 +370,122 @@ export const generateDeviceId = (deviceType: 'web' | 'ios' | 'android' = 'web'):
  */
 export const isSodiumReady = (): boolean => {
 	return sodiumReady;
+};
+/**
+ * Validate if a string is a valid base64-encoded key
+ * Libsodium box keys should be 32 bytes = 43 characters in base64 (with padding)
+ */
+export const isValidBase64Key = (value: string, minLength: number = 40, maxLength: number = 45): boolean => {
+	if (typeof value !== 'string') {
+		console.warn('Key validation failed: not a string', { type: typeof value });
+		return false;
+	}
+
+	const trimmed = value.trim();
+	let normalized: string;
+
+	try {
+		normalized = normalizeBase64Key(trimmed);
+	} catch (error) {
+		console.warn('Key validation failed: unable to normalize base64', { error });
+		return false;
+	}
+
+	// Check length
+	if (normalized.length < minLength || normalized.length > maxLength) {
+		console.warn('Key validation failed: invalid length', {
+			length: normalized.length,
+			minLength,
+			maxLength,
+		});
+		return false;
+	}
+
+	// Check characters
+	if (!/^[A-Za-z0-9+/=]+$/.test(normalized)) {
+		console.warn('Key validation failed: invalid base64 characters', {
+			value: normalized.substring(0, 20) + '...',
+		});
+		return false;
+	}
+
+	// Test round-trip: decode and re-encode
+	try {
+		const decoded = Buffer.from(normalized, 'base64');
+		const reencoded = decoded.toString('base64');
+
+		// Strip padding for comparison
+		const strippedInput = normalized.replace(/=+$/, '');
+		const strippedReencoded = reencoded.replace(/=+$/, '');
+
+		if (strippedInput !== strippedReencoded) {
+			console.warn('Key validation failed: encoding mismatch', {
+				original: strippedInput.substring(0, 20),
+				reencoded: strippedReencoded.substring(0, 20),
+			});
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.warn('Key validation failed: exception during decode/encode', { error });
+		return false;
+	}
+};
+
+/**
+ * Debug utility: Inspect a base64 key for encoding issues
+ */
+export const inspectBase64Key = (key: string): Record<string, any> => {
+	const inspection: Record<string, any> = {
+		rawString: key,
+		length: key.length,
+		trimmedLength: key.trim().length,
+		hasWhitespace: key !== key.trim(),
+		hasNewlines: /\n|\r/.test(key),
+		hasTabs: /\t/.test(key),
+		isString: typeof key === 'string',
+		isEmpty: key === '',
+		isNull: key === null,
+		isUndefined: key === undefined,
+	};
+
+	// Check character composition
+	const chars = {
+		uppercase: /[A-Z]/.test(key),
+		lowercase: /[a-z]/.test(key),
+		digits: /[0-9]/.test(key),
+		plus: /\+/.test(key),
+		slash: /\//.test(key),
+		equals: /=/.test(key),
+		others: !/^[A-Za-z0-9+/=\s\n\r\t]*$/.test(key),
+	};
+	inspection.characters = chars;
+
+	// Try to decode
+	try {
+		const decoded = Buffer.from(key.trim(), 'base64');
+		inspection.decodedLength = decoded.length;
+		inspection.decodedHex = decoded.toString('hex').substring(0, 32) + '...';
+		inspection.expectedLength = decoded.length === 32 ? 'VALID (32 bytes)' : `INVALID (${decoded.length} bytes, expected 32)`;
+	} catch (error) {
+		inspection.decodeError = String(error);
+	}
+
+	// Check base64 padding
+	const paddingMatch = key.match(/=+$/);
+	inspection.padding = paddingMatch ? paddingMatch[0].length : 0;
+
+	// Round-trip test
+	try {
+		const trimmed = key.trim();
+		const reencoded = Buffer.from(trimmed, 'base64').toString('base64');
+		const strippedInput = trimmed.replace(/=+$/, '');
+		const strippedReencoded = reencoded.replace(/=+$/, '');
+		inspection.roundTripMatch = strippedInput === strippedReencoded;
+	} catch (error) {
+		inspection.roundTripError = String(error);
+	}
+
+	return inspection;
 };

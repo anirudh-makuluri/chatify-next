@@ -1,3 +1,5 @@
+'use client'
+
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit'
 import { useDispatch, TypedUseSelectorHook, useSelector } from 'react-redux'
 

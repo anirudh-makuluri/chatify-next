@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Device Manager for handling device information and keypairs
  * Stores device data locally in localStorage

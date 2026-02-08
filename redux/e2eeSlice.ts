@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Redux Slice for E2EE State Management
  */

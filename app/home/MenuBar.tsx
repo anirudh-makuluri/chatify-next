@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect, useRef, useState } from 'react'
 import { ThemeToggle } from '../../components/theme-toggle'
 import { useUser } from '@/app/providers'
