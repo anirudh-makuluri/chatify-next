@@ -128,31 +128,6 @@ export class E2EEService {
 	}
 
 	/**
-	 * Decrypt a message received from a room
-	 */
-	async decryptRoomMessage(
-		ciphertext: string,
-		iv: string,
-		senderPublicKey: string,
-		roomId?: string
-	): Promise<string> {
-		try {
-			const yourPrivateKey = roomId
-				? deviceManager.getRoomPrivateKey(roomId)
-				: deviceManager.getIdentityPrivateKey();
-
-			if (!yourPrivateKey) {
-				throw new Error('Private key not found for decryption');
-			}
-
-			return crypto.decryptMessage(ciphertext, iv, senderPublicKey, yourPrivateKey);
-		} catch (error) {
-			console.error('Message decryption failed:', error);
-			throw error;
-		}
-	}
-
-	/**
 	 * Send encrypted message to room members
 	 */
 	async sendEncryptedMessage(
