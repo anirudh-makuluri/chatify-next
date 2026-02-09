@@ -9,12 +9,14 @@ import { joinSocketRoom } from '@/redux/socketSlice'
 import { TAIRoomResponse, TRoomData } from '@/lib/types'
 import { globals } from '@/globals'
 import { useToast } from './ui/use-toast'
+import { useDeviceId } from '@/lib/hooks/useE2EE'
 
 export default function AIAssistantButton() {
 	const user = useUser()?.user
 	const dispatch = useAppDispatch()
 	const rooms = useAppSelector(state => state.chat.rooms)
 	const { toast } = useToast()
+	const deviceId = useDeviceId()
 	
 	const [isCreating, setIsCreating] = useState(false)
 
@@ -41,7 +43,11 @@ export default function AIAssistantButton() {
 
 			// If not in Redux, join it first
 			dispatch(joinSocketRoom(aiRoom.roomId))
-			dispatch(joinChatRoom(aiRoom))
+			dispatch(joinChatRoom({
+				roomData: aiRoom,
+				userId: user.uid,
+				deviceId
+			}))
 			dispatch(setActiveRoomId(aiRoom.roomId))
 			return
 		}
@@ -62,7 +68,11 @@ export default function AIAssistantButton() {
 			if (data.success && data.room) {
 				// Add room to Redux state
 				dispatch(joinSocketRoom(data.roomId!))
-				dispatch(joinChatRoom(data.room))
+				dispatch(joinChatRoom({
+					roomData: data.room,
+					userId: user.uid,
+					deviceId
+				}))
 				dispatch(setActiveRoomId(data.roomId!))
 
 				// Update user's rooms list locally

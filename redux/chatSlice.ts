@@ -1,5 +1,6 @@
 import { ChatDate, ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSaveEvent } from "@/lib/types";
-import { formatChatMessages } from "@/lib/utils";
+import { formatChatMessages, decryptChatMessage } from "@/lib/utils";
+import * as deviceManager from "@/lib/device-manager";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from '@reduxjs/toolkit'
 
@@ -20,27 +21,48 @@ export const chatSlice = createSlice({
 	name: 'chat',
 	initialState,
 	reducers: {
-			joinChatRoom: (state, action: PayloadAction<TRoomData>) => {
-			const roomData = action.payload
+			joinChatRoom: (state, action: PayloadAction<{ roomData: TRoomData, userId?: string, deviceId?: string }>) => {
+			const { roomData, userId, deviceId } = action.payload;
 			if(state.rooms[roomData.roomId] != null) return;
+			
+			// Get room keypair once for batch decryption
+			const roomKeyPair = deviceManager.getRoomKeyPair(roomData.roomId);
+			
+			// Type guard to filter only ChatMessage objects (exclude ChatDate)
+			const isChatMessage = (msg: ChatMessage | ChatDate): msg is ChatMessage => 
+				typeof msg.id === 'number';
+			
+			// Decrypt all messages and saved messages (filter out ChatDate objects)
+			const decryptedMessages = (roomData.messages || []).map(msg => 
+				isChatMessage(msg) ? decryptChatMessage(msg, roomKeyPair, userId, deviceId) : msg
+			);
+			const decryptedSavedMessages = (roomData.saved_messages || []).map(msg => 
+				isChatMessage(msg) ? decryptChatMessage(msg, roomKeyPair, userId, deviceId) : msg
+			);
 				
-				state.rooms[roomData.roomId] = {
+			state.rooms[roomData.roomId] = {
 				is_group: roomData.is_group,
 				is_ai_room: roomData.roomId.startsWith('ai-assistant-'),
-				messages: formatChatMessages(roomData.messages || []),
+				messages: formatChatMessages(decryptedMessages),
 				name: roomData.name,
 				photo_url: roomData.photo_url,
 				roomId: roomData.roomId,
-					membersData: roomData.membersData || [],
-					saved_messages: roomData.saved_messages || []
+				membersData: roomData.membersData || [],
+				saved_messages: decryptedSavedMessages
 			}
 		},
 		setActiveRoomId: (state, action: PayloadAction<string>) => {
 			state.activeChatRoomId = action.payload
 			//unreadmessages = 0
 		},
-		addMessage: (state, action: PayloadAction<ChatMessage>) => {
-			const chatMessages = state.rooms[action.payload.roomId].messages;
+		addMessage: (state, action: PayloadAction<{ message: ChatMessage, userId?: string, deviceId?: string }>) => {
+			const { message, userId, deviceId } = action.payload;
+			// Get room keypair once for decryption
+			const roomKeyPair = deviceManager.getRoomKeyPair(message.roomId);
+			// Decrypt message if encrypted
+			const decryptedMessage = decryptChatMessage(message, roomKeyPair, userId, deviceId);
+			
+			const chatMessages = state.rooms[decryptedMessage.roomId].messages;
 			let lastMessage = chatMessages[chatMessages.length - 1];
 
 			const newChatDate: ChatDate = {
@@ -49,18 +71,18 @@ export const chatSlice = createSlice({
 			}
 
 			if (lastMessage == null) {
-				action.payload.isConsecutiveMessage = false;
+				decryptedMessage.isConsecutiveMessage = false;
 				chatMessages.push(newChatDate);
 			} else {
 				if (lastMessage.isDate) lastMessage = chatMessages[chatMessages.length - 2];
 
-				action.payload.isConsecutiveMessage = false;
-				if (lastMessage.userUid == action.payload.userUid) {
-					action.payload.isConsecutiveMessage = true;
+				decryptedMessage.isConsecutiveMessage = false;
+				if (lastMessage.userUid == decryptedMessage.userUid) {
+					decryptedMessage.isConsecutiveMessage = true;
 				}
 
 
-				const newMessageDate = new Date(action.payload.time);
+				const newMessageDate = new Date(decryptedMessage.time);
 				const lastMessageDate = new Date(lastMessage.time);
 
 				const isToday = newMessageDate.getDate() === lastMessageDate.getDate() &&
@@ -74,11 +96,20 @@ export const chatSlice = createSlice({
 
 			//Send push notification here
 
-			state.rooms[action.payload.roomId].messages = [...chatMessages, action.payload]
+			state.rooms[decryptedMessage.roomId].messages = [...chatMessages, decryptedMessage]
 		},
-		addChatDoc: (state, action: PayloadAction<{ messages: ChatMessage[], roomId: string }>) => {
-			const formattedMessages = formatChatMessages(action.payload.messages);
-			const currentMessages = state.rooms[action.payload.roomId].messages
+		addChatDoc: (state, action: PayloadAction<{ messages: ChatMessage[], roomId: string, userId?: string, deviceId?: string }>) => {
+			const { messages: rawMessages, roomId, userId, deviceId } = action.payload;
+			
+			// Get room keypair once for batch decryption (performance optimization)
+			const roomKeyPair = deviceManager.getRoomKeyPair(roomId);
+			// Decrypt all messages
+			const decryptedMessages = rawMessages.map(msg => 
+				decryptChatMessage(msg, roomKeyPair, userId, deviceId)
+			);
+			
+			const formattedMessages = formatChatMessages(decryptedMessages);
+			const currentMessages = state.rooms[roomId].messages
 
 			const curChatDocFirstMsg = currentMessages[1];
 			const newChatDocLastMsg = formattedMessages[formattedMessages.length - 1];
@@ -94,7 +125,7 @@ export const chatSlice = createSlice({
 				currentMessages.shift();
 			}
 
-			state.rooms[action.payload.roomId].messages = [...formattedMessages, ...currentMessages];
+			state.rooms[roomId].messages = [...formattedMessages, ...currentMessages];
 		},
 		updateChatReaction: (state, action : PayloadAction<TReactionEvent>) => {
 			const currentRoom = state.rooms[action.payload.roomId];

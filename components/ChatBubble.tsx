@@ -13,13 +13,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import ChatFeatures from './ChatFeatures';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from './ui/context-menu';
 import { Emoji } from 'emoji-picker-react';
-import { CheckIcon, PlusIcon, StarIcon, X } from 'lucide-react';
+import { CheckIcon, PlusIcon, StarIcon, X, Lock } from 'lucide-react';
 import { useAppSelector } from '@/redux/store';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { useDecryptMessage, useDeviceId } from '@/lib/hooks/useE2EE';
-import { Lock } from 'lucide-react';
-import { EncryptedData, RecipientEncryptedMessages } from '@/lib/e2ee-types';
 
 export default function ChatBubble({ message, isGroup, roomId }: { message: ChatMessage | ChatDate, isGroup: boolean, roomId: string }) {
 	const user = useUser()?.user;
@@ -46,7 +43,7 @@ export default function ChatBubble({ message, isGroup, roomId }: { message: Chat
 	function returnRequiredFormat() {
 		switch (message.type) {
 			case 'text':
-				return <TextMessage message={message} roomId={roomId} />
+				return <TextMessage message={message} />
 			case 'image':
 				return <ImageMessage message={message} />
 			case 'gif':
@@ -226,70 +223,7 @@ function getTooltipText(reactors: { uid: string, name: string }[]) {
 }
 
 
-function TextMessage({ message, roomId }: { message: ChatMessage | ChatDate, roomId: string }) {
-	const [decryptedText, setDecryptedText] = useState<string | null>(null);
-	const [decryptionAttempted, setDecryptionAttempted] = useState(false);
-	const { decrypt: decryptFn } = useDecryptMessage();
-	const user = useUser()?.user;
-	const deviceId = useDeviceId();
-
-	useEffect(() => {
-		if (!message.isEncrypted || decryptionAttempted) {
-			return;
-		}
-
-		try {
-
-			if (message.encrypted) {
-				const encryptedData = message.encrypted as RecipientEncryptedMessages;
-				const userData = encryptedData[user?.uid || ''];
-				
-				if (!userData) {
-					setDecryptionAttempted(true);
-					return;
-				}
-
-				const deviceData = userData[deviceId || ''];
-
-				if (!deviceData) {
-					setDecryptionAttempted(true);
-					return;
-				}
-
-				const ciphertext = deviceData.ciphertext;
-				const decrypted = decryptFn(ciphertext, roomId);
-
-				if (decrypted) {
-					setDecryptedText(decrypted);
-				} else {
-					setDecryptionAttempted(true);
-				}
-			}
-
-		} catch (error) {
-			console.error("Decryption error:", error);
-			setDecryptedText(null);
-			setDecryptionAttempted(true);
-			return;
-		}
-
-	}, [message, decryptionAttempted, user?.uid, deviceId]);
-
-	if (message.isEncrypted) {
-		if (decryptedText) {
-			return <p>{decryptedText}</p>;
-		} else if (decryptionAttempted) {
-			return (
-				<div className='flex items-center gap-2 italic text-gray-500'>
-					<Lock size={14} />
-					<span>This message is encrypted</span>
-				</div>
-			);
-		} else {
-			return <p className='text-gray-500'>Decrypting...</p>;
-		}
-	}
-
+function TextMessage({ message }: { message: ChatMessage | ChatDate }) {
 	return <p>{message.chatInfo}</p>;
 }
 

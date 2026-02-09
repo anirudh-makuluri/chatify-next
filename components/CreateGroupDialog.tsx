@@ -11,6 +11,7 @@ import { TRoomData, TUser } from '@/lib/types'
 import { useAppDispatch, useAppSelector } from '@/redux/store'
 import { joinChatRoom, setActiveRoomId } from '@/redux/chatSlice'
 import { joinSocketRoom } from '@/redux/socketSlice'
+import { useDeviceId } from '@/lib/hooks/useE2EE'
 
 type Props = {
     friends?: TUser[]
@@ -21,6 +22,7 @@ export default function CreateGroupDialog({ friends = [] }: Props) {
     const { toast } = useToast()
     const dispatch = useAppDispatch()
     const rooms = useAppSelector(s => s.chat.rooms)
+    const deviceId = useDeviceId()
 
     const [open, setOpen] = useState(false)
     const [name, setName] = useState('')
@@ -64,7 +66,11 @@ export default function CreateGroupDialog({ friends = [] }: Props) {
                 }
                 // Socket join and Redux add
                 dispatch(joinSocketRoom(res.roomId))
-                dispatch(joinChatRoom(safeRoom))
+                dispatch(joinChatRoom({
+                    roomData: safeRoom,
+                    userId: user.uid,
+                    deviceId
+                }))
                 dispatch(setActiveRoomId(res.roomId))
                 
                 // Update user context to add the new room to user.rooms

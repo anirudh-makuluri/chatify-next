@@ -14,7 +14,7 @@ import { ChatMessage, TDeleteEvent, TEditEvent, TReactionEvent, TRoomData, TSave
 import { genRoomId } from '@/lib/utils';
 import { useClientMediaQuery } from '@/lib/hooks/useClientMediaQuery';
 import LoadingScreen from '@/components/LoadingScreen';
-import { useE2EEInitialization } from '@/lib/hooks/useE2EE';
+import { useE2EEInitialization, useDeviceId } from '@/lib/hooks/useE2EE';
 
 
 export default function Page() {
@@ -24,6 +24,7 @@ export default function Page() {
 	const socket = useAppSelector(state => state.socket.socket);
 	const dispatch = useAppDispatch();
 	const e2eeInitialized = useE2EEInitialization();
+	const deviceId = useDeviceId();
 	const isMobile = useClientMediaQuery('(max-width: 600px)');
 
 	const [isLoadingScreenVisible, setLoadingScreenVisibility] = useState(true);
@@ -48,7 +49,11 @@ export default function Page() {
 		}));
 
 		user.rooms.forEach((roomData) => {
-			dispatch(joinChatRoom(roomData));
+			dispatch(joinChatRoom({ 
+				roomData,
+				userId: user.uid,
+				deviceId
+			}));
 		});
 
 		setRoomsInited(true);
@@ -69,7 +74,11 @@ export default function Page() {
 
 		socket.on('chat_event_server_to_client', (msg: ChatMessage) => {
 			console.log("Received message from " + msg);
-			dispatch(addMessage(msg))
+			dispatch(addMessage({ 
+				message: msg,
+				userId: user?.uid,
+				deviceId: deviceId
+			}))
 			//if activechatroomid != msg.roomid dispatch(inrecementunreadmessages)
 		})
 
@@ -108,7 +117,11 @@ export default function Page() {
 			rooms.push(newRoomData);
 
 			dispatch(joinSocketRoom(newRoomId))
-			dispatch(joinChatRoom(newRoomData))
+			dispatch(joinChatRoom({
+				roomData: newRoomData,
+				userId: user.uid,
+				deviceId
+			}))
 
 			updateUser({
 				friend_list: friendList,

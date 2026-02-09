@@ -40,7 +40,8 @@ import SemanticSearchBar from '@/components/SemanticSearchBar';
 import {
 	useFetchRoomMemberPublicKeys,
 	useE2EEError,
-	useEncryptRoomMessage
+	useEncryptRoomMessage,
+	useDeviceId
 } from '@/lib/hooks/useE2EE';
 import * as crypto from '@/lib/crypto';
 import * as deviceManager from '@/lib/device-manager';
@@ -57,6 +58,7 @@ export default function Room() {
 
 	const user = useUser()?.user;
 	const e2eeError = useE2EEError();
+	const deviceId = useDeviceId();
 	
 	// E2EE hooks for room encryption
 	const { memberPublicKeys, fetch: fetchKeys, loading: fetchingKeys } = useFetchRoomMemberPublicKeys(activeChatRoomId);
@@ -267,7 +269,12 @@ export default function Room() {
 				const curChatDocId = activeRoom?.messages?.[1]?.chatDocId;
 				socket.emit('load_chat_doc_from_db', { roomId, curChatDocId }, async (response: any) => {
 					if (response.success) {
-						dispatch(addChatDoc({ messages: response.chat_history, roomId }))
+						dispatch(addChatDoc({ 
+							messages: response.chat_history, 
+							roomId,
+							userId: user?.uid,
+							deviceId
+						}))
 						await sleep(100)
 						container.scrollTop = container.scrollHeight - currentPosition
 						setIsNewChatDocLoading(false);

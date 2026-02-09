@@ -8,12 +8,14 @@ import { useAppDispatch, useAppSelector } from '@/redux/store'
 import { joinSocketRoom } from '@/redux/socketSlice'
 import { joinChatRoom } from '@/redux/chatSlice'
 import { useToast } from './ui/use-toast'
+import { useDeviceId } from '@/lib/hooks/useE2EE'
 
 export default function FriendRequest({ invitedUser } : { invitedUser: TUser }) {
 	const { user, updateUser } = useUser();
 	const socket = useAppSelector(state => state.socket.socket);
 	const dispatch = useAppDispatch();
 	const { toast } = useToast();
+	const deviceId = useDeviceId();
 
 
 
@@ -59,7 +61,11 @@ export default function FriendRequest({ invitedUser } : { invitedUser: TUser }) 
 					rooms.push(newRoomData);
 
 					dispatch(joinSocketRoom(newRoomId))
-					dispatch(joinChatRoom(newRoomData))
+				dispatch(joinChatRoom({
+					roomData: newRoomData,
+					userId: user.uid,
+					deviceId
+				}))
 				}
 
 				updateUser({

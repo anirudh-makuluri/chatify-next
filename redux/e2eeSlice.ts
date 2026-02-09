@@ -38,7 +38,6 @@ export const e2eeSlice = createSlice({
 	reducers: {
 		// Initialize device
 		setDeviceState: (state, action: PayloadAction<E2EEDeviceState>) => {
-			console.log('Setting device state:', action.payload);
 			state.deviceState = action.payload;
 			state.error = null;
 		},

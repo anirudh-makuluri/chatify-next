@@ -2,6 +2,9 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ChatMessage, ChatDate } from "./types"
 import { globals } from "@/globals"
+import * as crypto from "./crypto"
+import * as deviceManager from "./device-manager"
+import { RecipientEncryptedMessages, EncryptedData } from "./e2ee-types"
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -50,6 +53,72 @@ export function genRoomId(uid1: string, uid2: string): string {
 	const roomId = sortedUids.join('_');
 
 	return roomId;
+}
+
+/**
+ * Decrypt a ChatMessage if it's encrypted
+ * Returns a new message with decrypted chatInfo, or original if decryption fails
+ * This is used in Redux reducers to decrypt messages as they're added
+ * 
+ * @param roomKeyPair - Pass the room keypair to avoid repeated lookups (performance optimization for batch operations)
+ */
+export function decryptChatMessage(
+	message: ChatMessage, 
+	roomKeyPair: { publicKey: string; privateKey: string } | null,
+	userId?: string, 
+	deviceId?: string
+): ChatMessage {
+	if (!message.isEncrypted || !message.encrypted) {
+		return message;
+	}
+
+	try {
+		// Initialize crypto if needed
+		if (!crypto.isSodiumReady()) {
+			console.warn('Crypto not initialized, skipping decryption');
+			return message;
+		}
+
+		// Get the ciphertext for this user/device
+		let ciphertext: string | null = null;
+
+		// Check if encrypted is a single EncryptedData object
+		if ((message.encrypted as EncryptedData).ciphertext) {
+			ciphertext = (message.encrypted as EncryptedData).ciphertext;
+		} else if (userId && deviceId) {
+			// It's a RecipientEncryptedMessages structure
+			const recipientMap = message.encrypted as RecipientEncryptedMessages;
+			const userEntry = recipientMap[userId];
+			if (userEntry && userEntry[deviceId]) {
+				ciphertext = userEntry[deviceId].ciphertext;
+			}
+		}
+
+		if (!ciphertext) {
+			console.warn('No matching ciphertext found for this user/device');
+			return message;
+		}
+
+		// Check if room keypair is available
+		if (!roomKeyPair) {
+			console.warn('Room keypair not provided');
+			return message;
+		}
+
+		// Decrypt the message
+		const decryptedText = crypto.decryptMessage(ciphertext, roomKeyPair);
+
+		
+		// Return message with decrypted chatInfo
+		return {
+			...message,
+			chatInfo: decryptedText
+		};
+	} catch (error) {
+		console.error('Failed to decrypt message in Redux:', error);
+		// Return original message on decryption failure
+		return message;
+	}
 }
 
 export function formatChatMessages(messages: (ChatDate | ChatMessage)[]) {
